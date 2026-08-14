@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePlatformData } from '../components/layout/PlatformLayout';
 import { CaseListView } from '../components/CaseListView';
 import { CaseDetailView } from '../components/CaseDetailView';
 import { DocumentCenterView } from '../components/DocumentCenterView';
-import { AIChatView } from '../components/AIChatView';
 import { AuditLogsView } from '../components/AuditLogsView';
 import { PricingView } from '../components/PricingView';
 import { AboutView } from '../components/AboutView';
@@ -54,30 +53,35 @@ export const DocumentsPage: React.FC = () => {
     if (res.ok) refresh();
   };
 
+  const handleUpload = async (caseId: string, title: string) => {
+    await fetch(apiUrl(`/cases/${caseId}/documents`), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, category: 'other', fileType: 'PDF', fileSize: '—' }),
+    });
+    await refresh();
+  };
+
   return (
     <DocumentCenterView
       documents={documents}
       cases={cases}
       onSelectCase={(id) => navigate(`/app/cases/${id}`)}
       onDeleteDocument={handleDelete}
+      onUploadDocument={handleUpload}
     />
   );
 };
 
-export const ChatPage: React.FC = () => {
-  const { cases } = usePlatformData();
-  const [selectedCaseId, setSelectedCaseId] = useState<string | undefined>(
-    new URLSearchParams(window.location.search).get('caseId') || undefined
-  );
-
-  return (
-    <AIChatView
-      cases={cases}
-      selectedCaseId={selectedCaseId}
-      onSelectCaseId={setSelectedCaseId}
-    />
-  );
-};
+export const ChatPage: React.FC = () => (
+  <div className="max-w-lg mx-auto py-16 text-center space-y-3">
+    <Badge tone="amber">به‌زودی</Badge>
+    <h1 className="text-lg font-black">چت AI عمومی</h1>
+    <p className="text-xs text-slate-500">
+      این قابلیت در Sprint 2 فقط به‌صورت ساختار در Workspace › AI آماده شده است.
+    </p>
+  </div>
+);
 
 export const AuditPage: React.FC = () => {
   const { auditLogs } = usePlatformData();

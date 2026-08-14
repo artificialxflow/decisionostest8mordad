@@ -17,9 +17,15 @@ import {
   ShieldCheck,
   FilePenLine,
   X,
-  Sparkles,
+  UserCheck,
+  ClipboardList,
 } from 'lucide-react';
 import { ROUTES } from '../../routes';
+import { useAuth } from '../../context/AuthContext';
+import { canAccessRoute, RouteKey } from '../../lib/permissions';
+import { FEATURES, featureBadge } from '../../config/features';
+import { ROLE_LABELS } from '../../lib/labels';
+import { Badge } from '../ui';
 
 interface PlatformSidebarProps {
   mobileOpen: boolean;
@@ -28,35 +34,74 @@ interface PlatformSidebarProps {
   unreadNotifications: number;
 }
 
-const menuGroups = [
+type MenuItem = {
+  to: string;
+  label: string;
+  icon: React.ElementType;
+  routeKey: RouteKey;
+  featureKey?: string;
+  badgeKey?: 'cases' | 'notif';
+  disabled?: boolean;
+};
+
+const menuGroups: { title: string; items: MenuItem[] }[] = [
   {
     title: 'اصلی',
     items: [
-      { to: ROUTES.dashboard, label: 'داشبورد', icon: LayoutDashboard },
-      { to: ROUTES.appServices, label: 'خدمات', icon: Briefcase },
-      { to: ROUTES.workspace, label: 'Workspace', icon: FolderKanban },
+      { to: ROUTES.dashboard, label: 'داشبورد', icon: LayoutDashboard, routeKey: 'dashboard' },
+      { to: ROUTES.appServices, label: 'خدمات', icon: Briefcase, routeKey: 'services' },
+      { to: ROUTES.workspace, label: 'Workspace', icon: FolderKanban, routeKey: 'workspace' },
+      { to: ROUTES.requestNew, label: 'ثبت درخواست', icon: ClipboardList, routeKey: 'requests' },
     ],
   },
   {
     title: 'عملیات',
     items: [
-      { to: ROUTES.cases, label: 'پرونده‌ها', icon: Gavel, badgeKey: 'cases' as const },
-      { to: ROUTES.documents, label: 'اسناد', icon: FileText },
-      { to: ROUTES.contracts, label: 'قراردادها', icon: FileSignature },
-      { to: ROUTES.chat, label: 'چت', icon: Bot, isAi: true },
-      { to: ROUTES.reports, label: 'گزارش‌ها', icon: BarChart3 },
+      { to: ROUTES.cases, label: 'پرونده‌ها', icon: Gavel, routeKey: 'cases', badgeKey: 'cases' },
+      { to: ROUTES.documents, label: 'اسناد', icon: FileText, routeKey: 'documents' },
+      {
+        to: ROUTES.contracts,
+        label: 'قراردادها',
+        icon: FileSignature,
+        routeKey: 'contracts',
+        featureKey: 'contracts',
+        disabled: true,
+      },
+      {
+        to: ROUTES.chat,
+        label: 'چت AI',
+        icon: Bot,
+        routeKey: 'chat',
+        featureKey: 'chat',
+        disabled: true,
+      },
+      {
+        to: ROUTES.reports,
+        label: 'گزارش‌ها',
+        icon: BarChart3,
+        routeKey: 'reports',
+        featureKey: 'reports',
+        disabled: true,
+      },
+    ],
+  },
+  {
+    title: 'مدیریت',
+    items: [
+      { to: ROUTES.experts, label: 'کارشناسان', icon: UserCheck, routeKey: 'experts' },
+      { to: ROUTES.adminServices, label: 'مدیریت خدمات', icon: Briefcase, routeKey: 'adminServices' },
     ],
   },
   {
     title: 'حساب',
     items: [
-      { to: ROUTES.subscription, label: 'اشتراک', icon: CreditCard },
-      { to: ROUTES.billing, label: 'صورتحساب', icon: Receipt },
-      { to: ROUTES.notifications, label: 'اعلان‌ها', icon: Bell, badgeKey: 'notif' as const },
-      { to: ROUTES.support, label: 'پشتیبانی', icon: LifeBuoy },
-      { to: ROUTES.settings, label: 'تنظیمات', icon: Settings },
-      { to: ROUTES.cms, label: 'CMS', icon: FilePenLine },
-      { to: ROUTES.audit, label: 'لاگ امنیتی', icon: ShieldCheck },
+      { to: ROUTES.subscription, label: 'اشتراک', icon: CreditCard, routeKey: 'subscription', featureKey: 'subscription', disabled: true },
+      { to: ROUTES.billing, label: 'صورتحساب', icon: Receipt, routeKey: 'billing', featureKey: 'billing', disabled: true },
+      { to: ROUTES.notifications, label: 'اعلان‌ها', icon: Bell, routeKey: 'notifications', badgeKey: 'notif' },
+      { to: ROUTES.support, label: 'پشتیبانی', icon: LifeBuoy, routeKey: 'support', featureKey: 'support', disabled: true },
+      { to: ROUTES.settings, label: 'تنظیمات', icon: Settings, routeKey: 'settings' },
+      { to: ROUTES.audit, label: 'لاگ امنیتی', icon: ShieldCheck, routeKey: 'audit' },
+      { to: ROUTES.cms, label: 'CMS', icon: FilePenLine, routeKey: 'cms', featureKey: 'cms', disabled: true },
     ],
   },
 ];
@@ -67,93 +112,102 @@ export const PlatformSidebar: React.FC<PlatformSidebarProps> = ({
   caseCount,
   unreadNotifications,
 }) => {
+  const { user } = useAuth();
+
   const getBadge = (key?: 'cases' | 'notif') => {
     if (key === 'cases' && caseCount > 0) return String(caseCount);
     if (key === 'notif' && unreadNotifications > 0) return String(unreadNotifications);
     return null;
   };
 
+  const renderItem = (item: MenuItem) => {
+    if (!canAccessRoute(user?.role, item.routeKey)) return null;
+
+    const badge = getBadge(item.badgeKey);
+    const comingSoon = item.featureKey ? featureBadge(item.featureKey) : null;
+    const isDisabled = item.disabled || (item.featureKey && FEATURES[item.featureKey]?.status !== 'active');
+
+    if (isDisabled) {
+      return (
+        <div
+          key={item.to}
+          title="به‌زودی"
+          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-400 cursor-not-allowed opacity-60"
+        >
+          <item.icon className="w-4 h-4 shrink-0" />
+          <span className="text-xs font-medium flex-1">{item.label}</span>
+          {comingSoon && <Badge tone="amber">{comingSoon}</Badge>}
+        </div>
+      );
+    }
+
+    return (
+      <NavLink
+        key={item.to}
+        to={item.to}
+        onClick={onCloseMobile}
+        className={({ isActive }) =>
+          `flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors text-xs font-medium ${
+            isActive
+              ? 'bg-blue-600 text-white'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`
+        }
+      >
+        <item.icon className="w-4 h-4 shrink-0" />
+        <span className="flex-1">{item.label}</span>
+        {badge && (
+          <span className="bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+            {badge}
+          </span>
+        )}
+      </NavLink>
+    );
+  };
+
   return (
     <>
       {mobileOpen && (
-        <div
-          onClick={onCloseMobile}
-          className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 lg:hidden"
-        />
+        <div onClick={onCloseMobile} className="fixed inset-0 bg-black/40 z-40 lg:hidden" />
       )}
 
       <aside
-        className={`fixed lg:sticky top-0 right-0 z-50 lg:z-20 h-screen w-60 bg-slate-900 text-slate-300 flex flex-col transition-transform duration-300 ease-in-out border-l border-slate-700/80 no-print ${
+        className={`fixed lg:static inset-y-0 right-0 z-50 w-64 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 flex flex-col transform transition-transform lg:transform-none ${
           mobileOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="flex items-center justify-between p-4 border-b border-slate-800 lg:hidden">
-          <span className="font-bold text-white text-sm">
-            Decision<span className="text-blue-500">OS</span>
-          </span>
-          <button onClick={onCloseMobile} className="p-1 text-slate-400 hover:text-white rounded-md">
+        <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 lg:hidden">
+          <span className="text-xs font-bold">منو</span>
+          <button onClick={onCloseMobile} className="p-1">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 space-y-4">
-          {menuGroups.map((group) => (
-            <div key={group.title}>
-              <div className="px-3 pb-1 text-[10px] font-bold tracking-tight text-slate-500 uppercase">
-                {group.title}
-              </div>
-              <div className="space-y-0.5">
-                {group.items.map((item) => {
-                  const Icon = item.icon;
-                  const badge = getBadge(item.badgeKey);
-                  return (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      onClick={onCloseMobile}
-                      className={({ isActive }) =>
-                        `w-full flex items-center justify-between px-3 py-2 rounded-md text-xs transition-colors ${
-                          isActive
-                            ? 'bg-blue-600 text-white font-medium'
-                            : item.isAi
-                              ? 'hover:bg-slate-800 text-slate-300 border border-blue-900/30'
-                              : 'hover:bg-slate-800 text-slate-300'
-                        }`
-                      }
-                    >
-                      {({ isActive }) => (
-                        <>
-                          <div className="flex items-center gap-2.5">
-                            <Icon
-                              className={`w-4 h-4 ${isActive ? 'text-white' : item.isAi ? 'text-blue-400' : 'text-slate-400'}`}
-                            />
-                            <span>{item.label}</span>
-                          </div>
-                          {badge && (
-                            <span
-                              className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${
-                                isActive ? 'bg-blue-700 text-white' : 'bg-slate-800 text-slate-400'
-                              }`}
-                            >
-                              {badge}
-                            </span>
-                          )}
-                          {item.isAi && !badge && (
-                            <Sparkles className="w-3 h-3 text-blue-400" />
-                          )}
-                        </>
-                      )}
-                    </NavLink>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
+        {user && (
+          <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+            <p className="text-[10px] text-slate-500">نقش فعال</p>
+            <p className="text-xs font-bold">{ROLE_LABELS[user.role]}</p>
+          </div>
+        )}
 
-        <div className="p-3 border-t border-slate-800 text-center text-[10px] text-slate-500">
-          DecisionOS Platform © 2026
-        </div>
+        <nav className="flex-1 overflow-y-auto p-3 space-y-4">
+          {menuGroups.map((group) => {
+            const visibleItems = group.items.filter((item) => canAccessRoute(user?.role, item.routeKey));
+            if (visibleItems.length === 0) return null;
+            if (group.title === 'مدیریت' && !canAccessRoute(user?.role, 'experts') && !canAccessRoute(user?.role, 'adminServices')) {
+              return null;
+            }
+
+            return (
+              <div key={group.title}>
+                <p className="text-[10px] font-bold text-slate-400 px-3 mb-1.5 uppercase tracking-wide">
+                  {group.title}
+                </p>
+                <div className="space-y-0.5">{group.items.map(renderItem)}</div>
+              </div>
+            );
+          })}
+        </nav>
       </aside>
     </>
   );

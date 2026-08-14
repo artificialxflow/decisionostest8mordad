@@ -12,11 +12,14 @@ export const ROUTES = {
 
   // Auth
   login: '/login',
+  register: '/register',
 
   // Platform
   app: '/app',
   dashboard: '/app/dashboard',
   appServices: '/app/services',
+  requestNew: '/app/request/new',
+  requestSuccess: '/app/request/success',
   workspace: '/app/workspace',
   workspaceDetail: '/app/workspace/:workspaceId',
   cases: '/app/cases',
@@ -33,6 +36,8 @@ export const ROUTES = {
   profile: '/app/profile',
   audit: '/app/audit',
   cms: '/app/cms',
+  experts: '/app/experts',
+  adminServices: '/app/admin/services',
 } as const;
 
 export type AppRoute = (typeof ROUTES)[keyof typeof ROUTES];

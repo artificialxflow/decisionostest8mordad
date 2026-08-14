@@ -28,7 +28,7 @@ export const mockUsers: User[] = [
     id: 'usr-3',
     name: 'شرکت پارس امید',
     email: 'client@pars-omid.ir',
-    role: 'client',
+    role: 'customer',
     organization: 'شرکت سرمایه‌گذاری پارس امید',
     workspaceIds: ['ws-1'],
   },

@@ -1,5 +1,5 @@
-/** نقش‌های پلتفرم DecisionOS */
-export type UserRole = 'client' | 'expert' | 'admin' | 'advocate' | 'legal_specialist' | 'real_estate_agent';
+/** نقش‌های پلتفرم DecisionOS — Sprint 2 */
+export type UserRole = 'admin' | 'manager' | 'expert' | 'customer' | 'partner';
 
 export interface User {
   id: string;
@@ -26,14 +26,15 @@ export type CaseCategory =
   | 'ai';
 
 export type CaseStatus =
-  | 'open'
-  | 'under_review'
-  | 'court_pending'
-  | 'closed'
-  | 'appealed'
-  | 'in_progress'
+  | 'new'
   | 'waiting_docs'
-  | 'completed';
+  | 'under_review'
+  | 'in_progress'
+  | 'waiting_customer'
+  | 'quality_control'
+  | 'completed'
+  | 'archived'
+  | 'cancelled';
 
 export type CasePriority = 'high' | 'medium' | 'low';
 
@@ -85,9 +86,12 @@ export interface CaseItem {
   description: string;
   tags: string[];
   assignedAdvocate: string;
+  customerId?: string;
+  serviceId?: string;
   assignedExpertId?: string;
   deadline?: string;
   workspaceId?: string;
+  requestId?: string;
   createdAt: string;
   updatedAt: string;
   legalDetails?: LegalDetails;
@@ -128,6 +132,7 @@ export interface DocumentItem {
   uploadedBy: string;
   ocrSummary?: string;
   ocrReady?: boolean;
+  docStatus?: DocumentStatus;
   aiKeyFindings?: string[];
   versions?: DocumentVersion[];
   previewUrl?: string;
@@ -198,6 +203,9 @@ export type ServiceCategory =
   | 'business'
   | 'ai';
 
+export type ServicePricingType = 'fixed' | 'hourly' | 'quote' | 'free';
+export type ServiceStatus = 'active' | 'inactive';
+
 export interface ServiceItem {
   id: string;
   title: string;
@@ -206,7 +214,53 @@ export interface ServiceItem {
   icon?: string;
   features?: string[];
   ctaLabel?: string;
+  requiredDocuments?: string[];
+  estimatedTime?: string;
+  pricingType?: ServicePricingType;
+  status?: ServiceStatus;
+  sortOrder?: number;
 }
+
+export type RequestStatus = 'draft' | 'submitted' | 'reviewing' | 'approved' | 'rejected';
+
+export interface RequestItem {
+  id: string;
+  serviceId: string;
+  customerId: string;
+  title: string;
+  description: string;
+  status: RequestStatus;
+  caseId?: string;
+  workspaceId?: string;
+  documentIds?: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ExpertProfile {
+  id: string;
+  userId: string;
+  name: string;
+  specialty: string;
+  status: 'active' | 'inactive';
+  activeCases: number;
+  email?: string;
+}
+
+export interface TimelineEventItem {
+  id: string;
+  caseId?: string;
+  workspaceId?: string;
+  action: string;
+  actorName: string;
+  actorId?: string;
+  objectType?: string;
+  objectId?: string;
+  timestamp: string;
+  details?: string;
+}
+
+export type DocumentStatus = 'ready' | 'incomplete' | 'needs_clarification';
 
 export type NotificationChannel = 'in_app' | 'email' | 'sms' | 'whatsapp';
 

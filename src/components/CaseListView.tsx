@@ -15,6 +15,9 @@ import {
   List
 } from 'lucide-react';
 import { CaseItem, CaseCategory, CaseStatus } from '../types';
+import { EmptyState } from './ui/EmptyState';
+import { ALL_CASE_STATUSES, CASE_STATUS_LABELS } from '../lib/labels';
+import { useAuth } from '../context/AuthContext';
 
 interface CaseListViewProps {
   cases: CaseItem[];
@@ -30,6 +33,7 @@ export const CaseListView: React.FC<CaseListViewProps> = ({
   onOpenNewCaseModal
 }) => {
   const { t } = useLanguage();
+  const { can } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'all' | CaseCategory>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,6 +53,16 @@ export const CaseListView: React.FC<CaseListViewProps> = ({
     }
     return true;
   });
+
+  const hasActiveFilters = searchQuery.trim() !== '' || statusFilter !== 'all' || activeTab !== 'all';
+  const isEmptySystem = cases.length === 0;
+  const isEmptyFiltered = !isEmptySystem && filteredCases.length === 0;
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setActiveTab('all');
+  };
 
   return (
     <div className="space-y-6 text-right font-vazirmatn">
@@ -158,23 +172,33 @@ export const CaseListView: React.FC<CaseListViewProps> = ({
               className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-1.5 text-xs focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-hidden font-medium"
             >
               <option value="all">همه وضعیت‌ها</option>
-              <option value="open">در جریان (Open)</option>
-              <option value="under_review">در حال بررسی (Under Review)</option>
-              <option value="court_pending">در انتظار وقت دادگاه (Court Pending)</option>
-              <option value="appealed">تجدیدنظر خواهی (Appealed)</option>
-              <option value="closed">مختومه (Closed)</option>
+              {ALL_CASE_STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {CASE_STATUS_LABELS[s]}
+                </option>
+              ))}
             </select>
           </div>
         </div>
       </div>
 
       {/* Cases Output */}
-      {filteredCases.length === 0 ? (
-        <div className="bg-white rounded-lg border border-slate-200 p-12 text-center space-y-3">
-          <Gavel className="w-12 h-12 text-slate-300 mx-auto" />
-          <h3 className="text-sm font-bold text-slate-700">هیچ پرونده‌ای با این مشخصات یافت نشد</h3>
-          <p className="text-xs text-slate-500">لطفا عبارت جستجو یا فیلتر را تغییر دهید یا پرونده جدید ثبت کنید.</p>
-        </div>
+      {isEmptySystem ? (
+        <EmptyState
+          title="هنوز پرونده‌ای ایجاد نکرده‌اید"
+          description="اولین پرونده خود را ثبت کنید یا از طریق ثبت درخواست شروع کنید."
+          actionLabel={can('create_case') ? 'ایجاد پرونده' : undefined}
+          onAction={can('create_case') ? onOpenNewCaseModal : undefined}
+          icon={<Gavel className="w-5 h-5" />}
+        />
+      ) : isEmptyFiltered ? (
+        <EmptyState
+          title="پرونده‌ای مطابق جستجو یافت نشد"
+          description="فیلتر یا عبارت جستجو را تغییر دهید."
+          actionLabel="پاک کردن فیلتر"
+          onAction={clearFilters}
+          icon={<Search className="w-5 h-5" />}
+        />
       ) : viewMode === 'grid' ? (
         /* GRID VIEW */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">

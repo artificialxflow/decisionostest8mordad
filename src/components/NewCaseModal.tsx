@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { X, Scale, Building2, AlertCircle } from 'lucide-react';
 import { CaseCategory, CasePriority, CaseStatus } from '../types';
+import { ALL_CASE_STATUSES, CASE_STATUS_LABELS } from '../lib/labels';
 
 interface NewCaseModalProps {
   isOpen: boolean;
@@ -16,7 +17,7 @@ export const NewCaseModal: React.FC<NewCaseModalProps> = ({ isOpen, onClose, onS
   const [title, setTitle] = useState('');
   const [caseNumber, setCaseNumber] = useState('');
   const [priority, setPriority] = useState<CasePriority>('medium');
-  const [status, setStatus] = useState<CaseStatus>('open');
+  const [status, setStatus] = useState<CaseStatus>('new');
   const [description, setDescription] = useState('');
   const [tagsInput, setTagsInput] = useState('');
 
@@ -190,11 +191,9 @@ export const NewCaseModal: React.FC<NewCaseModalProps> = ({ isOpen, onClose, onS
                 onChange={(e) => setStatus(e.target.value as CaseStatus)}
                 className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:bg-white focus:border-amber-500 focus:outline-hidden"
               >
-                <option value="open">در جریان (Open)</option>
-                <option value="under_review">در حال بررسی حقوقی (Under Review)</option>
-                <option value="court_pending">در انتظار وقت دادگاه (Court Pending)</option>
-                <option value="appealed">تجدیدنظر خواهی (Appealed)</option>
-                <option value="closed">مختومه (Closed)</option>
+                {ALL_CASE_STATUSES.map((s) => (
+                  <option key={s} value={s}>{CASE_STATUS_LABELS[s]}</option>
+                ))}
               </select>
             </div>
           </div>

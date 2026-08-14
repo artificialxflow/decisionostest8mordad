@@ -17,9 +17,15 @@ import {
   Calendar,
   UserCheck
 } from 'lucide-react';
-import { CaseItem, CaseNote, DocumentItem, CaseReport } from '../types';
+import { CaseItem, CaseNote, DocumentItem, CaseReport, CaseStatus } from '../types';
 import { ReportPrintModal } from './ReportPrintModal';
 import { apiUrl } from '../lib/api';
+import { normalizeCaseStatus, CASE_STATUS_LABELS, CASE_STATUS_COLORS, ALL_CASE_STATUSES, CASE_STATUS_TRANSITIONS } from '../lib/labels';
+import { useAuth } from '../context/AuthContext';
+import { getMockExperts, getMockTimelineEvents } from '../lib/mock';
+import { TimelineFeed } from './TimelineEvent';
+import { featureBadge } from '../config/features';
+import { Badge } from './ui';
 
 interface CaseDetailViewProps {
   caseId: string;
@@ -33,6 +39,9 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({
   onGoToChatWithCase
 }) => {
   const { t } = useLanguage();
+  const { can } = useAuth();
+  const experts = getMockExperts();
+  const aiBadge = featureBadge('aiAnalysis');
 
   const [caseItem, setCaseItem] = useState<CaseItem | null>(null);
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
@@ -52,6 +61,8 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({
   const [docTitle, setDocTitle] = useState('');
   const [docCategory, setDocCategory] = useState<any>('deed');
 
+  const [showAssignExpert, setShowAssignExpert] = useState(false);
+
   // Print Report Modal
   const [showReportModal, setShowReportModal] = useState(false);
 
@@ -59,6 +70,35 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({
   useEffect(() => {
     fetchCaseData();
   }, [caseId]);
+
+  const handleStatusChange = async (newStatus: CaseStatus) => {
+    if (!caseItem || !can('change_case_status')) return;
+    const res = await fetch(apiUrl(`/cases/${caseId}`), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...caseItem, status: newStatus }),
+    });
+    if (res.ok) fetchCaseData();
+  };
+
+  const handleAssignExpert = async (expertId: string) => {
+    if (!caseItem || !can('assign_expert')) return;
+    const res = await fetch(apiUrl(`/cases/${caseId}`), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...caseItem, assignedExpertId: expertId }),
+    });
+    if (res.ok) {
+      setShowAssignExpert(false);
+      fetchCaseData();
+    }
+  };
+
+  const allowedStatuses = caseItem
+    ? CASE_STATUS_TRANSITIONS[caseItem.status] || ALL_CASE_STATUSES
+    : [];
+
+  const timelineEvents = getMockTimelineEvents(caseId);
 
   const fetchCaseData = async () => {
     try {
@@ -69,7 +109,10 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({
         fetch(apiUrl(`/reports/${caseId}`))
       ]);
 
-      if (cRes.ok) setCaseItem(await cRes.json());
+      if (cRes.ok) {
+        const raw = await cRes.json();
+        setCaseItem({ ...raw, status: normalizeCaseStatus(raw.status) });
+      }
       if (dRes.ok) setDocuments(await dRes.json());
       if (nRes.ok) setNotes(await nRes.json());
       if (rRes.ok) setReport(await rRes.json());
@@ -174,6 +217,26 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({
 
   return (
     <div className="space-y-6 text-right font-vazirmatn">
+      {/* Assign Expert Modal */}
+      {showAssignExpert && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-5 max-w-sm w-full space-y-3 text-right">
+            <h3 className="font-bold text-sm">تخصیص کارشناس</h3>
+            {experts.map((e) => (
+              <button
+                key={e.id}
+                onClick={() => handleAssignExpert(e.userId)}
+                className="w-full text-right p-3 rounded-lg border hover:border-blue-400 text-xs"
+              >
+                <p className="font-bold">{e.name}</p>
+                <p className="text-slate-500">{e.specialty}</p>
+              </button>
+            ))}
+            <button onClick={() => setShowAssignExpert(false)} className="text-xs text-slate-500 w-full pt-2">انصراف</button>
+          </div>
+        </div>
+      )}
+
       {/* Top Header & Actions */}
       <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -202,8 +265,8 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({
                   شماره بایگانی: {caseItem.caseNumber}
                 </span>
 
-                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                  وضعیت: {caseItem.status}
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${CASE_STATUS_COLORS[caseItem.status]}`}>
+                  {CASE_STATUS_LABELS[caseItem.status]}
                 </span>
               </div>
 
@@ -215,18 +278,45 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({
 
           {/* Action Buttons */}
           <div className="flex items-center gap-2 flex-wrap shrink-0">
-            <button
-              onClick={handleRunAIAnalysis}
-              disabled={isAnalyzingAI}
-              className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs px-3.5 py-2 rounded-xl transition-all shadow-xs flex items-center gap-1.5"
-            >
-              {isAnalyzingAI ? (
-                <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Sparkles className="w-4 h-4" />
-              )}
-              <span>بازتحلیل هوش مصنوعی</span>
-            </button>
+            {can('change_case_status') && (
+              <select
+                value={caseItem.status}
+                onChange={(e) => handleStatusChange(e.target.value as CaseStatus)}
+                className="text-xs border rounded-lg px-2 py-1.5 font-bold"
+              >
+                <option value={caseItem.status}>{CASE_STATUS_LABELS[caseItem.status]}</option>
+                {allowedStatuses.map((s) => (
+                  <option key={s} value={s}>{CASE_STATUS_LABELS[s]}</option>
+                ))}
+              </select>
+            )}
+            {can('assign_expert') && (
+              <button
+                onClick={() => setShowAssignExpert(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3 py-2 rounded-xl flex items-center gap-1.5"
+              >
+                <UserCheck className="w-4 h-4" />
+                تخصیص کارشناس
+              </button>
+            )}
+            {aiBadge ? (
+              <span className="text-xs font-bold text-amber-700 bg-amber-50 px-3 py-2 rounded-xl border border-amber-200">
+                AI {aiBadge}
+              </span>
+            ) : (
+              <button
+                onClick={handleRunAIAnalysis}
+                disabled={isAnalyzingAI}
+                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5"
+              >
+                {isAnalyzingAI ? (
+                  <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Sparkles className="w-4 h-4" />
+                )}
+                <span>بازتحلیل AI</span>
+              </button>
+            )}
 
             <button
               onClick={() => setShowReportModal(true)}

@@ -13,32 +13,37 @@ import {
   Scale,
 } from 'lucide-react';
 import { ROUTES } from '../routes';
-import { Button } from '../components/ui';
+import { Button, Badge } from '../components/ui';
+import { IS_PRODUCTION } from '../lib/env';
+import { featureBadge } from '../config/features';
 
-const stats = [
-  { label: 'پرونده تحلیل‌شده', value: '۱۲٬۴۰۰+' },
-  { label: 'متخصص همکار', value: '۱۸۰+' },
-  { label: 'سازمان مشتری', value: '۴۵+' },
-  { label: 'دقت تحلیل AI', value: '۹۴٪' },
-];
+const stats = IS_PRODUCTION
+  ? []
+  : [
+      { label: 'پرونده تحلیل‌شده', value: '۱۲٬۴۰۰+' },
+      { label: 'متخصص همکار', value: '۱۸۰+' },
+      { label: 'سازمان مشتری', value: '۴۵+' },
+    ];
 
 const processSteps = [
   { title: 'ثبت درخواست', desc: 'شرح نیاز یا بارگذاری مدارک' },
   { title: 'ایجاد Workspace', desc: 'فضای کاری اختصاصی پرونده' },
-  { title: 'تحلیل اولیه AI', desc: 'ارزیابی ریسک و پیشنهاد مسیر' },
+  { title: 'بررسی کارشناس', desc: 'پیگیری وضعیت پرونده' },
   { title: 'تخصیص متخصص', desc: 'همراهی کارشناس تا نتیجه' },
 ];
 
-const testimonials = [
-  {
-    name: 'مدیر حقوقی هلدینگ پارس',
-    text: 'DecisionOS زمان بررسی قراردادهای ملکی ما را از هفته‌ها به چند ساعت کاهش داد.',
-  },
-  {
-    name: 'وکیل پایه یک دادگستری',
-    text: 'داشبورد پرونده و تحلیل AI برای پرونده‌های ثبتی واقعاً کاربردی است.',
-  },
-];
+const testimonials = IS_PRODUCTION
+  ? []
+  : [
+      {
+        name: 'مدیر حقوقی هلدینگ پارس',
+        text: 'DecisionOS زمان بررسی قراردادهای ملکی ما را از هفته‌ها به چند ساعت کاهش داد.',
+      },
+      {
+        name: 'وکیل پایه یک دادگستری',
+        text: 'داشبورد پرونده و Workspace برای پرونده‌های ثبتی واقعاً کاربردی است.',
+      },
+    ];
 
 export const LandingPage: React.FC = () => {
   const [query, setQuery] = useState('');
@@ -112,6 +117,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* Stats */}
+      {stats.length > 0 && (
       <section className="max-w-6xl mx-auto px-4 py-10 grid grid-cols-2 md:grid-cols-4 gap-4">
         {stats.map((s, i) => (
           <motion.div
@@ -127,6 +133,7 @@ export const LandingPage: React.FC = () => {
           </motion.div>
         ))}
       </section>
+      )}
 
       {/* AI Section */}
       <section className="bg-white dark:bg-slate-900 border-y border-slate-200 dark:border-slate-800">
@@ -140,15 +147,9 @@ export const LandingPage: React.FC = () => {
               هوش مصنوعی، هسته اصلی سیستم
             </h2>
             <p className="text-sm text-slate-500 leading-relaxed">
-              از ارزیابی سریع ریسک اسناد تا پیشنهاد مسیر حقوقی و خلاصه‌سازی مدارک — AI در تمام Workspace شما
-              حضور دارد. قابلیت‌های پیشرفته RAG و Agent در Sprintهای بعد فعال می‌شوند.
+              ساختار AI در Workspace آماده است. قابلیت‌های Agent، RAG و OCR در Sprint بعد فعال می‌شوند.
             </p>
-            <Link to={ROUTES.chat}>
-              <Button>
-                شروع گفتگوی هوشمند
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
-            </Link>
+            <Badge tone="amber">{featureBadge('rag') || 'به‌زودی'}</Badge>
           </div>
           <div className="rounded-xl bg-slate-900 text-slate-200 p-6 border border-slate-700 space-y-3">
             <div className="flex items-center gap-2 text-blue-400 text-xs font-bold">
