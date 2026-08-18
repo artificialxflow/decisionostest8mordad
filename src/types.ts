@@ -242,9 +242,17 @@ export interface ExpertProfile {
   userId: string;
   name: string;
   specialty: string;
+  city?: string;
   status: 'active' | 'inactive';
+  availability?: 'available' | 'busy';
   activeCases: number;
   email?: string;
+  bio?: string;
+  rating?: number;
+  hourlyRate?: number;
+  experienceYears?: number;
+  education?: string[];
+  workHistory?: { title: string; org: string; years: string }[];
 }
 
 export interface TimelineEventItem {

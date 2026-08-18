@@ -10,7 +10,6 @@ import { LandingPage } from './pages/LandingPage';
 import { ServicesPage } from './pages/ServicesPage';
 import { FaqPage } from './pages/FaqPage';
 import { ContactPage } from './pages/ContactPage';
-import { BlogPage } from './pages/BlogPage';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { WorkspacePage } from './pages/WorkspacePage';
@@ -37,6 +36,11 @@ import {
   SettingsPage,
 } from './pages/PlaceholderPages';
 import { CmsPage } from './pages/CmsPage';
+import { WorkflowsDocPage } from './pages/WorkflowsDocPage';
+import { ExpertProfilePage } from './pages/ExpertsPage';
+import { OrganizationsPage } from './pages/OrganizationsPage';
+import { AutomationPage } from './pages/PlaceholderPages';
+import { BlogListPage, BlogPostPage } from './pages/blog/BlogPages';
 import { ROUTES } from './routes';
 
 function CaseDetailRoute() {
@@ -62,7 +66,8 @@ export default function App() {
                 <Route path={ROUTES.pricing} element={<PricingPage />} />
                 <Route path={ROUTES.about} element={<AboutPage />} />
                 <Route path={ROUTES.faq} element={<FaqPage />} />
-                <Route path={ROUTES.blog} element={<BlogPage />} />
+                <Route path={ROUTES.blog.replace('/:slug', '')} element={<BlogListPage />} />
+                <Route path="blog/:slug" element={<BlogPostPage />} />
                 <Route path={ROUTES.contact} element={<ContactPage />} />
                 <Route path={ROUTES.login} element={<LoginPage />} />
                 <Route path={ROUTES.register} element={<LoginPage />} />
@@ -98,7 +103,11 @@ export default function App() {
                 <Route path="audit" element={<AuditPage />} />
                 <Route path="cms" element={<CmsPage />} />
                 <Route path="experts" element={<ExpertsPage />} />
+                <Route path="experts/:id" element={<ExpertProfilePage />} />
                 <Route path="admin/services" element={<ServicesAdminPage />} />
+                <Route path="workflows" element={<WorkflowsDocPage />} />
+                <Route path="automation" element={<AutomationPage />} />
+                <Route path="settings/organizations" element={<OrganizationsPage />} />
               </Route>
 
               <Route path="*" element={<Navigate to={ROUTES.home} replace />} />

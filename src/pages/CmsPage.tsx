@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { PageHeader, Badge, Button, Input } from '../components/ui';
+import { featureBadge } from '../config/features';
 
 const initialPages = [
   { id: 'home', title: 'صفحه اصلی', body: 'متن معرفی DecisionOS...' },
@@ -17,8 +18,8 @@ export const CmsPage: React.FC = () => {
     <div className="space-y-5">
       <PageHeader
         title="CMS"
-        description="ویرایش مطالب سایت بدون نیاز به برنامه‌نویس — اسکلت Sprint 1"
-        badge={<Badge tone="blue">Skeleton</Badge>}
+        description="ویرایش مطالب سایت بدون نیاز به برنامه‌نویس — محتوای About، FAQ و Landing"
+        badge={<Badge tone="amber">{featureBadge('cms') || 'به‌زودی'}</Badge>}
       />
       <div className="grid lg:grid-cols-3 gap-4">
         <div className="space-y-2">

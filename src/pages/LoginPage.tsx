@@ -115,8 +115,10 @@ export const LoginPage: React.FC = () => {
             {loading ? 'لطفاً صبر کنید...' : isRegister ? 'ثبت‌نام و ورود' : 'ورود'}
           </Button>
 
-          <p className="text-[10px] text-slate-500 text-center">
-            دمو: admin@decisionos.ir / sadeghi@decisionos.ir / client@pars-omid.ir — رمز: 123456
+          <p className="text-[10px] text-slate-500 text-center leading-relaxed">
+            دمو: admin / manager / sadeghi / client / partner @decisionos.ir — رمز: 123456
+            <br />
+            پس از ورود، از منوی «پیش‌نمایش نقش» بالای صفحه برای دیدن UI هر نقش استفاده کنید.
           </p>
 
           <button

@@ -17,6 +17,7 @@ export type Permission =
   | 'view_cms'
   | 'manage_services'
   | 'manage_experts'
+  | 'view_experts'
   | 'view_requests'
   | 'manage_requests'
   | 'view_tasks'
@@ -42,7 +43,10 @@ export type RouteKey =
   | 'cms'
   | 'experts'
   | 'adminServices'
-  | 'requests';
+  | 'requests'
+  | 'workflows'
+  | 'automation'
+  | 'organizations';
 
 const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   admin: [
@@ -62,6 +66,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'view_cms',
     'manage_services',
     'manage_experts',
+    'view_experts',
     'view_requests',
     'manage_requests',
     'view_tasks',
@@ -83,6 +88,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'view_audit',
     'manage_services',
     'manage_experts',
+    'view_experts',
     'view_requests',
     'manage_requests',
     'view_tasks',
@@ -101,6 +107,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'view_tasks',
     'manage_tasks',
     'view_notifications',
+    'view_experts',
   ],
   customer: [
     'view_dashboard',
@@ -112,6 +119,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'upload_document',
     'view_requests',
     'view_notifications',
+    'view_experts',
   ],
   partner: [
     'view_dashboard',
@@ -121,6 +129,8 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'upload_document',
     'view_tasks',
     'view_notifications',
+    'view_services',
+    'view_experts',
   ],
 };
 
@@ -140,9 +150,12 @@ const ROUTE_PERMISSIONS: Record<RouteKey, Permission> = {
   settings: 'view_dashboard',
   audit: 'view_audit',
   cms: 'view_cms',
-  experts: 'manage_experts',
+  experts: 'view_experts',
   adminServices: 'manage_services',
   requests: 'view_requests',
+  workflows: 'view_admin',
+  automation: 'view_dashboard',
+  organizations: 'view_admin',
 };
 
 export function hasPermission(role: UserRole | null | undefined, permission: Permission): boolean {

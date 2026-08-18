@@ -15,6 +15,8 @@ import {
 import { ROUTES } from '../routes';
 import { Button, Badge } from '../components/ui';
 import { IS_PRODUCTION } from '../lib/env';
+import posts from '../content/blog-posts.json';
+import { HOLDING_SERVICE_CATEGORIES } from '../lib/mock/organizations';
 import { featureBadge } from '../config/features';
 
 const stats = IS_PRODUCTION
@@ -88,27 +90,17 @@ export const LandingPage: React.FC = () => {
             </form>
 
             <div className="flex flex-wrap gap-2 pt-1">
-              <Link to={ROUTES.contact}>
+              <Link to={ROUTES.register}>
                 <Button size="lg">ثبت درخواست</Button>
               </Link>
-              <Link to={ROUTES.contact}>
+              <Link to={ROUTES.login}>
                 <Button size="lg" variant="outline" className="!border-slate-500 !text-white hover:!bg-white/10">
-                  شروع مشاوره
+                  ورود به اپ
                 </Button>
               </Link>
-              <Link to={ROUTES.dashboard}>
+              <Link to={ROUTES.services}>
                 <Button size="lg" variant="secondary">
-                  ایجاد Workspace
-                </Button>
-              </Link>
-              <Link to={ROUTES.documents}>
-                <Button size="lg" variant="ghost" className="!text-slate-200 hover:!bg-white/10">
-                  بارگذاری مدارک
-                </Button>
-              </Link>
-              <Link to={ROUTES.chat}>
-                <Button size="lg" variant="ghost" className="!text-blue-200 hover:!bg-white/10">
-                  دریافت تحلیل اولیه
+                  مشاهده خدمات
                 </Button>
               </Link>
             </div>
@@ -163,6 +155,36 @@ export const LandingPage: React.FC = () => {
               <div className="h-full w-[78%] bg-blue-500 rounded-full" />
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Holding categories + News */}
+      <section className="max-w-6xl mx-auto px-4 py-14 grid lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-4">
+          <h2 className="text-xl font-black">خدمات هلدینگ</h2>
+          <p className="text-xs text-slate-500">دسته‌بندی زیر یک سقف — حقوق، بیمه، حسابداری و بیشتر</p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {HOLDING_SERVICE_CATEGORIES.map((cat) => (
+              <div key={cat.id} className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                <h3 className="text-sm font-bold">{cat.label}</h3>
+                <p className="text-[11px] text-slate-500 mt-1">{cat.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="space-y-4">
+          <h2 className="text-lg font-black">اخبار و الهام</h2>
+          {posts.slice(0, 3).map((p) => (
+            <Link
+              key={p.slug}
+              to={`/blog/${p.slug}`}
+              className="block p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-blue-400"
+            >
+              <p className="text-[10px] text-slate-400">{p.date}</p>
+              <p className="text-xs font-bold mt-1">{p.title}</p>
+            </Link>
+          ))}
+          <Link to={ROUTES.blog} className="text-xs text-blue-600 font-bold">همه مقالات →</Link>
         </div>
       </section>
 

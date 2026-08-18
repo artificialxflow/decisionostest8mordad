@@ -1,0 +1,81 @@
+10. Dashboard
+Dashboard فقط از Database واقعی اطلاعات بگیرد.
+حداقل:
+New Requests / Active Cases / Documents / Tasks / Notifications
+داده Fake در محیط Production ممنوع است.
+
+11. API و امنیت
+APIها با ساختار:
+/api/v1/...
+و ماژول‌های:
+Auth / Users / Services / Requests / Cases / Workspaces / Documents / Tasks / Notifications
+اصول الزامی:
+Authentication / Authorization / Validation / Error Handling / Logging / Rate Limiting
+
+12. موارد خارج از Scope Sprint 2
+در این Sprint توسعه داده نشوند:
+AI Agent، RAG کامل، Vector Database، OCR پیشرفته، تحلیل خودکار پرونده، تولید لایحه با AI، حسابداری هوشمند، Voice AI، WhatsApp Automation، BI کامل و اپلیکیشن Native.
+معماری باید فقط برای اتصال آینده این قابلیت‌ها آماده باشد.
+
+معیار قطعی پایان Sprint 2
+Sprint 2 زمانی تأیید می‌شود که یک مشتری واقعی بتواند:
+ثبت‌نام → ورود → انتخاب خدمت → ثبت درخواست → بارگذاری مدرک → ایجاد پرونده → ایجاد Workspace → مشاهده وضعیت
+را انجام دهد و مدیر نیز بتواند:
+درخواست را مشاهده → پرونده را مدیریت → کارشناس تعیین → وضعیت را تغییر → فعالیت‌ها را مشاهده
+کند.
+همچنین RBAC، Audit Log، Notification، Search/Filter و ذخیره واقعی اطلاعات باید عملیاتی باشند.
+ترتیب اجرای برنامه‌نویس
+Final Fix Sprint 1
+
+↓
+
+تأیید و Freeze Sprint 1
+
+↓
+
+Database + RBAC
+
+↓
+
+Service Catalog
+
+↓
+
+Request
+
+↓
+
+Case
+
+↓
+
+Workspace
+
+↓
+
+Documents
+
+↓
+
+Expert + Task
+
+↓
+
+Workflow + Timeline
+
+↓
+
+Notification
+
+↓
+
+Dashboard + Search
+
+↓
+
+Security + Testing
+
+↓
+
+Deploy Sprint 2
+این متن مبنای اجرایی برنامه‌نویس برای بستن Sprint 1 و شروع Sprint 2 است. هیچ قابلیت خارج از Scope فوق بدون تأیید جداگانه وارد Sprint 2 نشود.

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, Upload, Search, Trash2, Eye, History, Loader2 } from 'lucide-react';
+import { FileText, Upload, Search, Trash2, Eye, History, Loader2, Download } from 'lucide-react';
 import { DocumentItem, CaseItem } from '../types';
 import { Badge, Button, EmptyState } from './ui';
 import { useAuth } from '../context/AuthContext';
@@ -35,8 +35,21 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
   const [pending, setPending] = useState<PendingUpload | null>(null);
   const [uploading, setUploading] = useState(false);
   const [selectedCaseId, setSelectedCaseId] = useState(cases[0]?.id || '');
+  const [toast, setToast] = useState('');
   const [previewDoc, setPreviewDoc] = useState<DocumentItem | null>(null);
   const ocrBadge = featureBadge('ocr');
+
+  const handleDownload = (doc: DocumentItem) => {
+    const blob = new Blob([`Mock content: ${doc.title}`], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${doc.title}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setToast('دانلود آغاز شد (نمایشی)');
+    setTimeout(() => setToast(''), 2500);
+  };
 
   const filteredDocs = documents.filter((d) => {
     if (selectedCategory !== 'all' && d.category !== selectedCategory) return false;
@@ -76,6 +89,8 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
     try {
       await onUploadDocument(selectedCaseId, pending.name.replace(/\.[^.]+$/, ''));
       setPending(null);
+      setToast('فایل ذخیره شد (نمایشی)');
+      setTimeout(() => setToast(''), 2500);
     } finally {
       setUploading(false);
     }
@@ -101,6 +116,12 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
           {documents.length} مدرک
         </span>
       </div>
+
+      {toast && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs px-4 py-2 rounded-lg shadow-lg z-50">
+          {toast}
+        </div>
+      )}
 
       {can('upload_document') && (
         <div
@@ -194,7 +215,8 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                   )}
                 </div>
                 <div className="flex gap-1 shrink-0">
-                  <button onClick={() => setPreviewDoc(d)} className="p-1.5 hover:bg-slate-100 rounded" title="Preview"><Eye className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => handleDownload(d)} className="p-1.5 hover:bg-slate-100 rounded" title="Download" aria-label="دانلود"><Download className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => setPreviewDoc(d)} className="p-1.5 hover:bg-slate-100 rounded" title="Preview" aria-label="پیش‌نمایش"><Eye className="w-3.5 h-3.5" /></button>
                   {can('delete_document') && (
                     <button onClick={() => onDeleteDocument(d.id)} className="p-1.5 hover:bg-red-50 text-red-600 rounded" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
                   )}
@@ -216,7 +238,8 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
             ) : (
               <div className="h-32 bg-slate-100 rounded flex items-center justify-center text-xs text-slate-500">پیش‌نمایش فایل</div>
             )}
-            <Button size="sm" className="mt-4 w-full" onClick={() => setPreviewDoc(null)}>بستن</Button>
+            <Button size="sm" className="mt-4 w-full" onClick={() => { handleDownload(previewDoc); setPreviewDoc(null); }}>دانلود</Button>
+            <Button size="sm" variant="ghost" className="mt-2 w-full" onClick={() => setPreviewDoc(null)}>بستن</Button>
           </div>
         </div>
       )}

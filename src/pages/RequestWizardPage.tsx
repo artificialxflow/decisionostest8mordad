@@ -5,6 +5,7 @@ import { PageHeader, Button, Badge, EmptyState } from '../components/ui';
 import { getMockServices, submitMockRequest } from '../lib/mock';
 import { useAuth } from '../context/AuthContext';
 import { ROUTES } from '../routes';
+import { ExpertMatchingPanel } from '../components/ExpertMatchingPanel';
 import { ServiceItem } from '../types';
 
 const STEPS = ['انتخاب خدمت', 'اطلاعات', 'مدارک', 'بررسی', 'ثبت'];
@@ -20,7 +21,8 @@ export const RequestWizardPage: React.FC = () => {
   const [serviceId, setServiceId] = useState(preselected || '');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [files, setFiles] = useState<{ name: string; size: string }[]>([]);
+  const [files, setFiles] = useState<{ name: string; size: string; preview?: string }[]>([]);
+  const [uploadToast, setUploadToast] = useState('');
   const [error, setError] = useState('');
 
   const selected = services.find((s) => s.id === serviceId);
@@ -56,8 +58,11 @@ export const RequestWizardPage: React.FC = () => {
       Array.from(list).map((f) => ({
         name: f.name,
         size: `${(f.size / 1024).toFixed(0)} KB`,
+        preview: f.type.startsWith('image/') ? URL.createObjectURL(f) : undefined,
       }))
     );
+    setUploadToast('فایل ذخیره شد (نمایشی)');
+    setTimeout(() => setUploadToast(''), 3000);
   };
 
   return (
@@ -135,28 +140,36 @@ export const RequestWizardPage: React.FC = () => {
       )}
 
       {step === 2 && (
-        <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-8 text-center space-y-3">
-          <Upload className="w-8 h-8 text-blue-600 mx-auto" />
-          <p className="text-xs font-bold">بارگذاری مدارک مورد نیاز</p>
-          {selected?.requiredDocuments && (
-            <p className="text-[10px] text-slate-500">
-              مدارک: {selected.requiredDocuments.join('، ')}
-            </p>
-          )}
-          <label className="inline-block cursor-pointer text-xs text-blue-600 font-bold">
-            <input type="file" multiple className="hidden" onChange={(e) => handleFiles(e.target.files)} />
-            انتخاب فایل
-          </label>
-          {files.length > 0 && (
-            <ul className="text-left text-xs space-y-1 mt-4">
-              {files.map((f) => (
-                <li key={f.name} className="flex items-center gap-2 justify-center">
-                  <FileText className="w-3.5 h-3.5" />
-                  {f.name} — {f.size}
-                </li>
-              ))}
-            </ul>
-          )}
+        <div className="space-y-4">
+          <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-8 text-center space-y-3">
+            <Upload className="w-8 h-8 text-blue-600 mx-auto" />
+            <p className="text-xs font-bold">بارگذاری مدارک مورد نیاز</p>
+            {selected?.requiredDocuments && (
+              <p className="text-[10px] text-slate-500">
+                مدارک: {selected.requiredDocuments.join('، ')}
+              </p>
+            )}
+            <label className="inline-block cursor-pointer text-xs text-blue-600 font-bold">
+              <input type="file" multiple accept=".pdf,image/*" onChange={(e) => handleFiles(e.target.files)} className="hidden" />
+              انتخاب فایل
+            </label>
+            {uploadToast && <p className="text-xs text-emerald-600 font-bold">{uploadToast}</p>}
+            {files.length > 0 && (
+              <ul className="text-xs space-y-2 mt-4">
+                {files.map((f) => (
+                  <li key={f.name} className="flex items-center gap-2 justify-center p-2 rounded border bg-slate-50 dark:bg-slate-800">
+                    {f.preview ? (
+                      <img src={f.preview} alt="" className="w-10 h-10 object-cover rounded" />
+                    ) : (
+                      <FileText className="w-4 h-4" />
+                    )}
+                    {f.name} — {f.size}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          {selected && <ExpertMatchingPanel serviceTitle={selected.title} compact />}
         </div>
       )}
 

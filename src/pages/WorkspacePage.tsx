@@ -21,6 +21,8 @@ import { CASE_STATUS_LABELS, CASE_STATUS_COLORS, TASK_STATUS_LABELS } from '../l
 import { featureBadge } from '../config/features';
 import { PlatformTask } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { DocumentLoopPanel, CaseStatusBar } from '../components/DocumentLoopPanel';
+import { getDocumentLoopState } from '../lib/mock/documentLoop';
 
 const tabs = [
   { id: 'overview', label: 'Overview', icon: FolderKanban },
@@ -48,6 +50,8 @@ export const WorkspacePage: React.FC = () => {
   const wsCases = cases.filter((c) => selected && (c.workspaceId === selected.id || !c.workspaceId));
   const wsDocs = documents.filter((d) => wsCases.some((c) => c.id === d.caseId));
   const primaryCase = wsCases[0];
+  const docLoop = getDocumentLoopState(primaryCase?.id);
+  const caseStatus = docLoop.caseStatus || primaryCase?.status || 'new';
   const timelineEvents = getMockTimelineEvents(primaryCase?.id, selected?.id);
   const aiBadge = featureBadge('workspaceAi');
 
@@ -145,7 +149,9 @@ export const WorkspacePage: React.FC = () => {
 
           <div className="p-4 min-h-[280px]">
             {activeTab === 'overview' && primaryCase && (
-              <div className="space-y-3">
+              <div className="space-y-4">
+                <CaseStatusBar currentStatus={caseStatus} />
+                <DocumentLoopPanel caseId={primaryCase.id} />
                 <div className="grid sm:grid-cols-2 gap-3">
                   <div className="p-3 rounded-lg border">
                     <p className="text-[10px] text-slate-500">وضعیت</p>

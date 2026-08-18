@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { CaseItem, CaseCategory, CaseStatus } from '../types';
 import { EmptyState } from './ui/EmptyState';
-import { ALL_CASE_STATUSES, CASE_STATUS_LABELS } from '../lib/labels';
+import { ALL_CASE_STATUSES, CASE_STATUS_LABELS, CASE_STATUS_COLORS } from '../lib/labels';
 import { useAuth } from '../context/AuthContext';
 
 interface CaseListViewProps {
@@ -362,9 +362,12 @@ export const CaseListView: React.FC<CaseListViewProps> = ({
                       {c.realEstateDetails?.successProbability || 80}٪
                     </td>
                     <td className="p-3">
-                      <span className="text-[10px] font-semibold bg-slate-100 text-slate-700 px-2 py-0.5 rounded">
-                        {c.status}
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${CASE_STATUS_COLORS[c.status] || 'bg-slate-100'}`}>
+                        {CASE_STATUS_LABELS[c.status] || c.status}
                       </span>
+                      {c.status === 'waiting_docs' && (
+                        <span className="block text-[9px] text-amber-600 font-bold mt-0.5">مدارک ناقص</span>
+                      )}
                     </td>
                     <td className="p-3 text-center space-x-1">
                       <button

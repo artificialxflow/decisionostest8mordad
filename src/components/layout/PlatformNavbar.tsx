@@ -13,10 +13,12 @@ import {
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Language } from '../../types';
+import { Button, Badge } from '../ui';
 import { ROUTES } from '../../routes';
 import { usePlatformData } from './PlatformLayout';
 import { useAuth } from '../../context/AuthContext';
 import { GlobalSearch } from '../GlobalSearch';
+import { RoleSwitcher } from '../RoleSwitcher';
 import { ROLE_LABELS } from '../../lib/labels';
 
 interface PlatformNavbarProps {
@@ -27,7 +29,7 @@ interface PlatformNavbarProps {
 export const PlatformNavbar: React.FC<PlatformNavbarProps> = ({ onToggleMobile }) => {
   const { lang, setLang, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
-  const { user, logout, can } = useAuth();
+  const { user, logout, can, isDemoMode } = useAuth();
   const { openNewCase, notifications } = usePlatformData();
   const navigate = useNavigate();
   const unread = notifications.filter((n) => !n.read).length;
@@ -74,6 +76,10 @@ export const PlatformNavbar: React.FC<PlatformNavbarProps> = ({ onToggleMobile }
       </div>
 
       <div className="flex items-center gap-2">
+        <RoleSwitcher />
+        {isDemoMode && (
+          <Badge tone="amber" className="hidden md:inline-flex text-[9px]">نمایشی</Badge>
+        )}
         <button
           onClick={toggleTheme}
           className="p-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md"

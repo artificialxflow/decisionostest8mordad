@@ -37,7 +37,12 @@ export const ROUTES = {
   audit: '/app/audit',
   cms: '/app/cms',
   experts: '/app/experts',
+  expertProfile: '/app/experts/:id',
   adminServices: '/app/admin/services',
+  workflows: '/app/workflows',
+  automation: '/app/automation',
+  organizations: '/app/settings/organizations',
+  blogPost: '/blog/:slug',
 } as const;
 
 export type AppRoute = (typeof ROUTES)[keyof typeof ROUTES];

@@ -1,4 +1,5 @@
 import { ServiceItem, ExpertProfile, PlatformTask, RequestItem, TimelineEventItem } from '../../types';
+import { MOCK_EXPERTS_FULL } from './experts';
 
 export const MOCK_SERVICES: ServiceItem[] = [
   {
@@ -99,26 +100,11 @@ export const MOCK_SERVICES: ServiceItem[] = [
   },
 ];
 
-export const MOCK_EXPERTS: ExpertProfile[] = [
-  {
-    id: 'exp-1',
-    userId: 'usr-1',
-    name: 'دکتر محمدرضا صادقی',
-    specialty: 'حقوق ملکی',
-    status: 'active',
-    activeCases: 3,
-    email: 'sadeghi@decisionos.ir',
-  },
-  {
-    id: 'exp-2',
-    userId: 'usr-2',
-    name: 'مهندس مریم تهرانی',
-    specialty: 'املاک و ثبتی',
-    status: 'active',
-    activeCases: 2,
-    email: 'tehrani@decisionos.ir',
-  },
-];
+export const MOCK_EXPERTS: ExpertProfile[] = MOCK_EXPERTS_FULL;
+
+export { MOCK_EXPERTS_FULL, getExpertById } from './experts';
+export * from './documentLoop';
+export * from './organizations';
 
 let mockTasks: PlatformTask[] = [
   {
@@ -247,6 +233,16 @@ export function getMockTimelineEvents(caseId?: string, workspaceId?: string): Ti
       objectType: 'expert',
       objectId: 'usr-1',
       timestamp: '۱۴۰۳/۰۵/۰۳ — ۱۱:۰۰',
+    },
+    {
+      id: 'tl-5',
+      caseId: 'case-101',
+      workspaceId: 'ws-1',
+      action: 'مدارک ناقص اعلام شد',
+      actorName: 'مدیر',
+      objectType: 'document',
+      timestamp: '۱۴۰۳/۰۵/۰۴ — ۱۴:۰۰',
+      details: 'پرونده → waiting_docs',
     },
   ];
 

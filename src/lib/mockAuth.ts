@@ -48,7 +48,30 @@ const DEMO_USERS: Record<string, { password: string; user: User }> = {
       workspaceIds: ['ws-1'],
     },
   },
+  'partner@decisionos.ir': {
+    password: '123456',
+    user: {
+      id: 'usr-partner',
+      name: 'همکار تجاری آریا',
+      email: 'partner@decisionos.ir',
+      role: 'partner',
+      organization: 'موسسه همکاری حقوقی آریا',
+      workspaceIds: ['ws-2'],
+    },
+  },
 };
+
+const DEMO_ROLE_USERS: Record<UserRole, User> = {
+  admin: DEMO_USERS['admin@decisionos.ir'].user,
+  manager: DEMO_USERS['manager@decisionos.ir'].user,
+  expert: DEMO_USERS['sadeghi@decisionos.ir'].user,
+  customer: DEMO_USERS['client@pars-omid.ir'].user,
+  partner: DEMO_USERS['partner@decisionos.ir'].user,
+};
+
+export function getDemoUserForRole(role: UserRole): User {
+  return { ...DEMO_ROLE_USERS[role] };
+}
 
 export function loadStoredUser(): User | null {
   try {
@@ -114,7 +137,12 @@ export function getPostLoginRoute(role: UserRole): string {
   switch (role) {
     case 'customer':
       return '/app/services';
+    case 'expert':
+      return '/app/cases';
+    case 'partner':
+      return '/app/workspace';
     case 'admin':
+      return '/app/admin/services';
     case 'manager':
       return '/app/dashboard';
     default:
