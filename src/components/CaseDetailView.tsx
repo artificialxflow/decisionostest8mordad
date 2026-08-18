@@ -15,7 +15,8 @@ import {
   Bot,
   Trash2,
   Calendar,
-  UserCheck
+  UserCheck,
+  Upload,
 } from 'lucide-react';
 import { CaseItem, CaseNote, DocumentItem, CaseReport, CaseStatus } from '../types';
 import { ReportPrintModal } from './ReportPrintModal';
@@ -24,6 +25,7 @@ import { normalizeCaseStatus, CASE_STATUS_LABELS, CASE_STATUS_COLORS, ALL_CASE_S
 import { useAuth } from '../context/AuthContext';
 import { getMockExperts, getMockTimelineEvents } from '../lib/mock';
 import { TimelineFeed } from './TimelineEvent';
+import { DocumentLoopPanel, CaseStatusBar } from './DocumentLoopPanel';
 import { featureBadge } from '../config/features';
 import { Badge } from './ui';
 
@@ -65,6 +67,8 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({
 
   // Print Report Modal
   const [showReportModal, setShowReportModal] = useState(false);
+  const [docUploadToast, setDocUploadToast] = useState('');
+  const [docDragOver, setDocDragOver] = useState(false);
 
   // Fetch Case Data
   useEffect(() => {
@@ -204,6 +208,12 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({
     } catch (err) {
       alert('خطا در حذف مدرک.');
     }
+  };
+
+  const handleDocZoneFiles = (list: FileList | null) => {
+    if (!list || list.length === 0) return;
+    setDocUploadToast(`${list.length} فایل ذخیره شد (نمایشی)`);
+    setTimeout(() => setDocUploadToast(''), 3000);
   };
 
   if (!caseItem) {
@@ -388,9 +398,13 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({
         </div>
       </div>
 
+      <CaseStatusBar currentStatus={caseItem.status} />
+
       {/* TAB CONTENT 1: OVERVIEW */}
       {activeTab === 'overview' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="space-y-6">
+          <DocumentLoopPanel caseId={caseId} />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Specs */}
           <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
             <div>
@@ -553,6 +567,7 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({
             )}
           </div>
         </div>
+        </div>
       )}
 
       {/* TAB CONTENT 2: AI ANALYSIS */}
@@ -664,6 +679,39 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({
               <span>بارگذاری مدرک جدید</span>
             </button>
           </div>
+
+          <div
+            className={`border-2 border-dashed rounded-xl p-8 text-center space-y-3 transition-colors ${
+              docDragOver ? 'border-blue-500 bg-blue-50/50' : 'border-slate-300 bg-slate-50/30'
+            }`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDocDragOver(true);
+            }}
+            onDragLeave={() => setDocDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDocDragOver(false);
+              handleDocZoneFiles(e.dataTransfer.files);
+            }}
+          >
+            <Upload className="w-8 h-8 text-blue-600 mx-auto" />
+            <p className="text-xs font-bold">فایل را اینجا رها کنید یا انتخاب کنید</p>
+            <p className="text-[10px] text-slate-500">PDF، تصویر — ذخیره نمایشی بدون Backend</p>
+            <label className="inline-block cursor-pointer text-xs text-blue-600 font-bold">
+              <input
+                type="file"
+                multiple
+                accept=".pdf,image/*"
+                className="hidden"
+                onChange={(e) => handleDocZoneFiles(e.target.files)}
+              />
+              انتخاب فایل
+            </label>
+            {docUploadToast && <p className="text-xs text-emerald-600 font-bold">{docUploadToast}</p>}
+          </div>
+
+          <DocumentLoopPanel caseId={caseId} />
 
           <div className="space-y-3">
             {documents.length === 0 ? (

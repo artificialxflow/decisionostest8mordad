@@ -62,10 +62,10 @@ const menuGroups: { title: string; items: MenuItem[] }[] = [
     items: [
       { to: ROUTES.cases, label: 'پرونده‌ها', icon: Gavel, routeKey: 'cases', badgeKey: 'cases' },
       { to: ROUTES.documents, label: 'اسناد', icon: FileText, routeKey: 'documents' },
-      { to: ROUTES.contracts, label: 'قراردادها', icon: FileSignature, routeKey: 'contracts', featureKey: 'contracts', showComingSoon: true },
+      { to: ROUTES.contracts, label: 'قراردادها', icon: FileSignature, routeKey: 'contracts', featureKey: 'contracts' },
       { to: ROUTES.chat, label: 'چت AI', icon: Bot, routeKey: 'chat', featureKey: 'chat', showComingSoon: true },
-      { to: ROUTES.reports, label: 'گزارش‌ها', icon: BarChart3, routeKey: 'reports', featureKey: 'bi', showComingSoon: true },
-      { to: ROUTES.automation, label: 'اتوماسیون', icon: Zap, routeKey: 'automation', featureKey: 'aiAnalysis', showComingSoon: true },
+      { to: ROUTES.reports, label: 'گزارش‌ها', icon: BarChart3, routeKey: 'reports', featureKey: 'bi' },
+      { to: ROUTES.automation, label: 'اتوماسیون', icon: Zap, routeKey: 'automation', featureKey: 'aiAnalysis' },
       { to: ROUTES.workflows, label: 'Workflowها', icon: GitBranch, routeKey: 'workflows' },
     ],
   },
@@ -83,13 +83,13 @@ const menuGroups: { title: string; items: MenuItem[] }[] = [
   {
     title: 'حساب',
     items: [
-      { to: ROUTES.subscription, label: 'اشتراک', icon: CreditCard, routeKey: 'subscription', featureKey: 'subscription', showComingSoon: true },
-      { to: ROUTES.billing, label: 'صورتحساب', icon: Receipt, routeKey: 'billing', featureKey: 'billing', showComingSoon: true },
+      { to: ROUTES.subscription, label: 'اشتراک', icon: CreditCard, routeKey: 'subscription', featureKey: 'subscription' },
+      { to: ROUTES.billing, label: 'صورتحساب', icon: Receipt, routeKey: 'billing', featureKey: 'billing' },
       { to: ROUTES.notifications, label: 'اعلان‌ها', icon: Bell, routeKey: 'notifications', badgeKey: 'notif' },
-      { to: ROUTES.support, label: 'پشتیبانی', icon: LifeBuoy, routeKey: 'support', featureKey: 'support', showComingSoon: true },
+      { to: ROUTES.support, label: 'پشتیبانی', icon: LifeBuoy, routeKey: 'support', featureKey: 'support' },
       { to: ROUTES.settings, label: 'تنظیمات', icon: Settings, routeKey: 'settings' },
       { to: ROUTES.audit, label: 'لاگ امنیتی', icon: ShieldCheck, routeKey: 'audit' },
-      { to: ROUTES.cms, label: 'CMS', icon: FilePenLine, routeKey: 'cms', featureKey: 'cms', showComingSoon: true },
+      { to: ROUTES.cms, label: 'CMS', icon: FilePenLine, routeKey: 'cms', featureKey: 'cms' },
     ],
   },
 ];

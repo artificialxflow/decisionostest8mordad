@@ -10,6 +10,7 @@ interface FeaturePageProps {
   purpose: string;
   futureFlow?: string[];
   featureKey?: string;
+  demoUI?: boolean;
   children?: React.ReactNode;
 }
 
@@ -19,15 +20,21 @@ export const FeaturePage: React.FC<FeaturePageProps> = ({
   purpose,
   futureFlow,
   featureKey,
+  demoUI,
   children,
 }) => {
-  const badge = featureKey ? featureBadge(featureKey) : 'در حال توسعه';
+  const badgeLabel = demoUI
+    ? 'نسخه نمایشی'
+    : featureKey
+      ? featureBadge(featureKey) || 'به‌زودی'
+      : 'در حال توسعه';
+  const badgeTone = demoUI ? 'blue' : 'amber';
   return (
     <div className="space-y-5">
       <PageHeader
         title={title}
         description={description}
-        badge={<Badge tone="amber">{badge || 'به‌زودی'}</Badge>}
+        badge={<Badge tone={badgeTone}>{badgeLabel}</Badge>}
       />
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-5 space-y-3">
         <h3 className="text-sm font-bold">این بخش برای چیست؟</h3>
@@ -59,7 +66,7 @@ export const ContractsPage = () => (
     title="قراردادها"
     description="مدیریت، بازبینی و امضای قراردادهای مرتبط با پرونده"
     purpose="این بخش برای نگهداری قراردادهای مرتبط با هر پرونده یا Workspace طراحی شده. مدیر می‌تواند پیش‌نویس را بارگذاری کند، کارشناس بازبینی کند و مشتری نسخه نهایی را تأیید کند."
-    featureKey="contracts"
+    demoUI
     futureFlow={[
       'آپلود پیش‌نویس قرارداد',
       'بازبینی حقوقی توسط Expert',
@@ -101,7 +108,7 @@ export const ReportsPage = () => (
     title="گزارش‌ها"
     description="گزارش‌های تحلیلی پرونده، Workspace و BI سازمانی"
     purpose="داشبورد BI برای مدیران و هلدینگ‌ها: تعداد پرونده به تفکیک خدمت، زمان میانگین رسیدگی، نرخ تکمیل مدارک و درآمد. فعلاً نمودارهای نمایشی — اتصال داده واقعی در Sprint Backend."
-    featureKey="bi"
+    demoUI
     futureFlow={['فیلتر بازه زمانی', 'خروجی PDF/Excel', 'گزارش سفارشی', 'داشبورد هلدینگ']}
   >
     <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -129,7 +136,7 @@ export const SubscriptionPage = () => (
     <PageHeader
       title="اشتراک"
       description="مدیریت پلن، سقف استفاده و دسترسی سازمان"
-      badge={<Badge tone="amber">{featureBadge('subscription') || 'به‌زودی'}</Badge>}
+      badge={<Badge tone="blue">نسخه نمایشی</Badge>}
     />
     <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
       مشترک <strong>اپلیکیشن</strong> را دریافت می‌کند؛ Landing و محتوای SEO جداست مگر کل سایت خریداری شود.
@@ -164,7 +171,7 @@ export const BillingPage = () => (
     title="صورتحساب"
     description="فاکتورها، پرداخت‌ها و تاریخچه مالی"
     purpose="مدیریت فاکتورهای صادره برای مشتریان و پرداخت‌های متخصصین. شامل وضعیت pending/paid/overdue و یادآوری خودکار."
-    featureKey="billing"
+    demoUI
     futureFlow={['صدور فاکتور از پرونده', 'پرداخت آنلاین', 'رسید PDF', 'گزارش مالیاتی']}
   >
     <div className="space-y-2">
@@ -190,7 +197,7 @@ export const SupportPage = () => {
       title="پشتیبانی"
       description="تیکت، راهنما و ارتباط با تیم پشتیبانی"
       purpose="مشتریان داخل Workspace می‌توانند تیکت ثبت کنند. سؤالات عمومی از FAQ پاسخ داده می‌شود. تیکت‌ها به دسته خدمت (قرارداد، بیمه، حسابداری…) مسیریابی می‌شوند."
-      featureKey="support"
+      demoUI
     >
       <div className="grid md:grid-cols-2 gap-4">
         <form
@@ -228,7 +235,7 @@ export const AutomationPage = () => (
     title="اتوماسیون"
     description="پرسش‌وپاسخ هوشمند، NDST و گردش کار خودکار"
     purpose="بخش اتوماسیون برای پاسخ به سؤالات تکراری، راهنمای ثبت‌نام و در آینده تحلیل مدارک با AI. NDST (Need Detection & Smart Triage) موضوع مشکل مشتری را تشخیص و به دسته مناسب هدایت می‌کند."
-    featureKey="aiAnalysis"
+    demoUI
     futureFlow={[
       'تشخیص موضوع: قرارداد؟ بیمه؟ حسابداری؟',
       'پرسش‌وپاسخ از FAQ داخلی',

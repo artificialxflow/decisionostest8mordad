@@ -12,7 +12,25 @@
 **هدف:** ظاهر کامل → تأیید کارفرما → بعداً Backend (Sprint جدا)  
 **برآورد کل:** 3–4 هفته (۱ dev فرانت)  
 **تاریخ:** ۱۴۰۵/۰۵/۲۷  
-**وضعیت اجرا:** ✅ فاز ۰–۹ تکمیل شد (۱۴۰۵/۰۵/۲۷)
+**وضعیت اجرا:** ✅ فاز ۰–۹ + **فاز ۱۰ (Polish کارفرما)** تکمیل شد
+
+---
+
+## فاز ۱۰ — Polish کارفرما (بازخورد نهایی)
+**اولویت:** Critical | **منبع:** بازخورد کارفرما + `updates/03/2.txt`
+
+### چک‌لیست
+- [x] Request Wizard: مرحله «انتخاب دسته هلدینگ» قبل از خدمت (`HOLDING_SERVICE_CATEGORIES`)
+- [x] فیلتر `MOCK_SERVICES` بر اساس دسته هلدینگ
+- [x] هدر mock: نام tenant / «هلدینگ پارس امید» — برچسب «سقف هلدینگ» (نه «هلدینگ تجاری»)
+- [x] Sidebar: حذف badge «به‌زودی» از صفحات UI کامل (قرارداد، گزارش، پشتیبانی، automation، billing، subscription)
+- [x] Sidebar: badge «به‌زودی» فقط برای AI/OCR/Backend واقعی (چت AI)
+- [x] صفحه چت AI: `FeaturePage` کامل با mock گفتگو
+- [x] `DocumentLoopPanel` در `CaseDetailView` (overview + documents)
+- [x] Notification mock «مدارک ناقص» برای customer (`usr-3`)
+- [x] Upload zone (drag-drop) در تب documents پرونده
+
+**خروجی:** ظاهر آماده ارائه مجدد به کارفرما
 
 ---
 
@@ -22,10 +40,10 @@
 |------|---------|----------------|
 | Frontend UI پایه | ✅ ~90% | ✅ 100% + محتوا + demo |
 | Role Demo Switcher | ❌ | ✅ Dropdown بالای Navbar |
-| صفحات «به‌زودی» | 🟡 disabled | ✅ صفحات توضیحی کامل |
-| Document Loop UI | 🟡 جزئی | ✅ Checklist + badge + CTA |
+| صفحات «به‌زودی» | 🟡 disabled | ✅ صفحات توضیحی — badge sidebar فقط AI/OCR |
+| Document Loop UI | 🟡 جزئی | ✅ Workspace + **CaseDetailView** |
 | Workflow | ❌ | ✅ صفحه توضیح (بدون engine) |
-| Multi-tenant ظاهری | ❌ | ✅ سازمان/هلدینگ concept |
+| Multi-tenant ظاهری | ❌ | ✅ سازمان + **فلو هلدینگ در Request Wizard** |
 | Expert Marketplace | 🟡 پایه | ✅ فیلتر + پروفایل + حساب‌کتاب |
 | AI Matching UI | ❌ | ✅ Placeholder ظاهری |
 | محتوای عمومی | 🟡 | ✅ About, FAQ, Blog, Landing |
@@ -146,10 +164,12 @@
 
 ### چک‌لیست
 - [x] Sidebar: آیتم‌های ناقص **قابل کلیک** (نه فقط disabled)
-- [x] هر صفحه: `PageHeader` + توضیح هدف + `FeatureStatus` badge
+- [x] هر صفحه: `PageHeader` + توضیح هدف + badge (نسخه نمایشی / به‌زودی AI)
 - [x] Mock data برای list/table (قراردادها، گزارش‌ها)
 - [x] لینک متقابل: Support ↔ FAQ
 - [x] Automation: توضیح NDST / پرسش‌وپاسخ (placeholder از جلسه)
+- [x] چت AI: `FeaturePage` کامل (فاز ۱۰)
+- [x] Sidebar: badge «به‌زودی» فقط AI/OCR — نه صفحات mock کامل (فاز ۱۰)
 
 **خروجی:** هیچ منوی مرده بدون توضیح نماند
 
@@ -179,12 +199,14 @@
   - [x] Case status → `waiting_docs` (mock)
 - [x] Status bar ۸ مرحله‌ای در Workspace (از دیاگرام)
 - [x] Timeline mock event: «مدارک ناقص اعلام شد»
-- [x] Notification mock: «لطفاً مدارک را تکمیل کنید»
+- [x] Notification mock: «لطفاً مدارک را تکمیل کنید» (customer / case-101)
+- [x] `DocumentLoopPanel` در `CaseDetailView` (فاز ۱۰)
 
 ### فایل‌ها
 - `src/components/DocumentLoopPanel.tsx` (جدید)
 - `src/components/DocumentCenterView.tsx`
 - `src/pages/WorkspacePage.tsx`
+- `src/components/CaseDetailView.tsx` (فاز ۱۰)
 - `src/lib/mock/index.ts` — state نمونه waiting_docs
 
 **خروجی:** فلو بصری Document Loop قابل demo (بدون API)
@@ -275,6 +297,7 @@
 - [x] Organization switcher (UI) در Settings
 - [x] توضیح: «چطور شرکت دیگر دسترسی می‌گیرد» (invite mock)
 - [x] Service catalog: گروه‌بندی زیر سقف هلدینگ
+- [x] **Request Wizard:** مرحله انتخاب دسته هلدینگ → فیلتر خدمات (فاز ۱۰)
 - [x] Landing vs App: callout در About/Settings
 - [x] برچسب «فقط UI — Backend بعداً»
 
@@ -320,7 +343,7 @@
 - [x] Preview فایل (PDF/image placeholder)
 - [x] دکمه Download روی هر سند (mock blob / toast)
 - [x] Request Wizard step: upload + preview
-- [x] Case detail tab documents: upload zone
+- [x] Case detail tab documents: upload zone (drag-drop — فاز ۱۰)
 - [x] Workspace documents tab: sync با mock list
 - [x] Toast: «فایل ذخیره شد (نمایشی)»
 - [x] Empty state: «هنوز مدرکی آپلود نشده»
@@ -339,8 +362,8 @@
 - [x] Admin → Manager → Expert → Customer → Partner (هر کدام sidebar متفاوت)
 
 **۲. Customer Journey**
-- [x] Landing → ثبت‌نام/login → انتخاب خدمت → wizard → upload → workspace
-- [x] Document Loop: بنر ناقص → re-upload mock
+- [x] Landing → ثبت‌نام/login → **دسته هلدینگ** → انتخاب خدمت → wizard → upload → workspace
+- [x] Document Loop: بنر ناقص → re-upload mock (Workspace + CaseDetail)
 
 **۳. Manager Journey**
 - [x] Dashboard stats → case list → document review → assign expert
@@ -349,7 +372,7 @@
 - [x] Cases assigned → tasks → profile/earnings tab
 
 **۵. Placeholder Pages**
-- [x] همه «به‌زودی» → صفحه با توضیح
+- [x] صفحات mock کامل — badge sidebar فقط برای AI/OCR واقعی
 
 **۶. Public Site**
 - [x] About, FAQ, Blog, Contact
@@ -358,7 +381,7 @@
 - [x] Role switcher × login واقعی
 - [x] RTL + Dark + Mobile
 - [x] هیچ AI فعال به نظر نرسد
-- [x] `npm run build` بدون error
+- [x] `npm run build` / `vite build` بدون error (tsc ممکن است warning/error قدیمی mockData داشته باشد)
 - [x] Demo credentials در README/dev banner
 
 **خروجی:** آماده ارائه و تأیید ظاهر
@@ -452,8 +475,9 @@ src/
 ## معیار Done (Frontend v3)
 
 - [x] کارفرما با Role Switcher هر ۵ نقش را بدون login ببیند
-- [x] هیچ منوی «به‌زودی» بدون صفحه توضیحی نماند
-- [x] Document Loop بصری demo شود (checklist + waiting_docs)
+- [x] صفحات mock کامل بدون badge «به‌زودی» در sidebar (به جز AI/OCR)
+- [x] Document Loop بصری demo شود (checklist + waiting_docs + CaseDetail)
+- [x] فلو Request Wizard: دسته هلدینگ → خدمت فیلترشده
 - [x] صفحه Workflow فقط توضیح — بدون engine
 - [x] Expert directory + profile + earnings UI
 - [x] AI matching فقط placeholder
@@ -479,9 +503,8 @@ src/
 
 ---
 
-## شروع فوری — ✅ انجام شد
+## شروع فوری — وضعیت
 
-1. ~~فاز ۰~~ — QA + build موفق
-2. ~~فاز ۱~~ — Role Demo Switcher
-3. ~~فاز ۲~~ — صفحات به‌زودی
-4. ~~فاز ۳–۹~~ — Document Loop، Workflow، Experts، Multi-tenant، محتوا، Upload
+1. ~~فاز ۰–۹~~ — پایه Frontend
+2. ~~فاز ۱۰~~ — Polish کارفرما (هلدینگ در wizard، sidebar، CaseDetail، Chat AI)
+3. **بعد از تأیید کارفرما** → `todo-v4-backend.md`

@@ -72,5 +72,38 @@ export const HOLDING_SERVICE_CATEGORIES = [
   { id: 'insurance', label: 'بیمه', desc: 'اختلافات و پوشش بیمه‌ای' },
   { id: 'accounting', label: 'حسابداری', desc: 'اسناد مالی و مالیاتی' },
   { id: 'real_estate', label: 'املاک', desc: 'ثبت، سند و معاملات ملکی' },
-  { id: 'business', label: 'کسب‌وکار', desc: 'ثبت شرکت و حاکمیت شرکتی' },
+  { id: 'business', label: 'کسب‌وکار', desc: 'ثبت شرکت، سرمایه‌گذاری و حاکمیت شرکتی' },
 ];
+
+/** نگاشت دسته سقف هلدینگ → category خدمات MOCK_SERVICES */
+export const HOLDING_TO_SERVICE_CATEGORIES: Record<string, string[]> = {
+  legal: ['legal'],
+  contract: ['contract'],
+  insurance: ['insurance'],
+  accounting: ['accounting', 'finance'],
+  real_estate: ['real_estate'],
+  business: ['business', 'investment'],
+};
+
+export const DEFAULT_TENANT_NAME = 'هلدینگ پارس امید';
+
+export function getTenantDisplayName(organization?: string): string {
+  return organization || DEFAULT_TENANT_NAME;
+}
+
+export function filterServicesByHoldingCategory<T extends { category: string }>(
+  services: T[],
+  holdingCategoryId: string | null
+): T[] {
+  if (!holdingCategoryId) return services;
+  const allowed = HOLDING_TO_SERVICE_CATEGORIES[holdingCategoryId];
+  if (!allowed) return services;
+  return services.filter((s) => allowed.includes(s.category));
+}
+
+export function getHoldingCategoryForService(serviceCategory: string): string | null {
+  for (const [holdingId, categories] of Object.entries(HOLDING_TO_SERVICE_CATEGORIES)) {
+    if (categories.includes(serviceCategory)) return holdingId;
+  }
+  return null;
+}

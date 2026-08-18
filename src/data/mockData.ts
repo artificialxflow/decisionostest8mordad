@@ -61,6 +61,17 @@ export const mockWorkspaces: Workspace[] = [
 
 export const mockNotifications: AppNotification[] = [
   {
+    id: 'notif-docs-1',
+    userId: 'usr-3',
+    title: 'مدارک ناقص',
+    body: 'لطفاً مدارک را تکمیل کنید — کارت ملی شریک دوم و فرم ثبت‌نام هنوز بارگذاری نشده است.',
+    channel: 'in_app',
+    read: false,
+    createdAt: '۱۴۰۳/۰۵/۰۴',
+    type: 'warning',
+    link: '/app/cases/case-101',
+  },
+  {
     id: 'notif-1',
     userId: 'usr-1',
     title: 'وقت دادگاه نزدیک است',

@@ -1,23 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { Check, ChevronLeft, ChevronRight, Upload, FileText } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Upload, FileText, Building2 } from 'lucide-react';
 import { PageHeader, Button, Badge, EmptyState } from '../components/ui';
 import { getMockServices, submitMockRequest } from '../lib/mock';
 import { useAuth } from '../context/AuthContext';
 import { ROUTES } from '../routes';
 import { ExpertMatchingPanel } from '../components/ExpertMatchingPanel';
 import { ServiceItem } from '../types';
+import {
+  HOLDING_SERVICE_CATEGORIES,
+  filterServicesByHoldingCategory,
+  getTenantDisplayName,
+  getHoldingCategoryForService,
+} from '../lib/mock/organizations';
 
-const STEPS = ['انتخاب خدمت', 'اطلاعات', 'مدارک', 'بررسی', 'ثبت'];
+const STEPS = ['دسته هلدینگ', 'انتخاب خدمت', 'اطلاعات', 'مدارک', 'بررسی', 'ثبت'];
 
 export const RequestWizardPage: React.FC = () => {
   const [params] = useSearchParams();
   const preselected = params.get('serviceId');
   const { user } = useAuth();
   const navigate = useNavigate();
-  const services = getMockServices().filter((s) => s.status !== 'inactive');
+  const allServices = getMockServices().filter((s) => s.status !== 'inactive');
+  const tenantName = getTenantDisplayName(user?.organization);
+
+  const preselectedService = preselected ? allServices.find((s) => s.id === preselected) : undefined;
+  const initialHolding = preselectedService
+    ? getHoldingCategoryForService(preselectedService.category)
+    : null;
 
   const [step, setStep] = useState(0);
+  const [holdingCategoryId, setHoldingCategoryId] = useState<string | null>(initialHolding);
   const [serviceId, setServiceId] = useState(preselected || '');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -25,12 +38,19 @@ export const RequestWizardPage: React.FC = () => {
   const [uploadToast, setUploadToast] = useState('');
   const [error, setError] = useState('');
 
-  const selected = services.find((s) => s.id === serviceId);
+  const filteredServices = useMemo(
+    () => filterServicesByHoldingCategory(allServices, holdingCategoryId),
+    [allServices, holdingCategoryId]
+  );
+
+  const selected = allServices.find((s) => s.id === serviceId);
+  const selectedHolding = HOLDING_SERVICE_CATEGORIES.find((c) => c.id === holdingCategoryId);
 
   const canNext = () => {
-    if (step === 0) return !!serviceId;
-    if (step === 1) return title.trim().length >= 3 && description.trim().length >= 10;
-    if (step === 2) return true;
+    if (step === 0) return !!holdingCategoryId;
+    if (step === 1) return !!serviceId;
+    if (step === 2) return title.trim().length >= 3 && description.trim().length >= 10;
+    if (step === 3) return true;
     return true;
   };
 
@@ -48,6 +68,7 @@ export const RequestWizardPage: React.FC = () => {
         caseId: result.caseId,
         workspaceId: result.workspaceId,
         serviceTitle: selected.title,
+        holdingCategory: selectedHolding?.label,
       },
     });
   };
@@ -65,11 +86,36 @@ export const RequestWizardPage: React.FC = () => {
     setTimeout(() => setUploadToast(''), 3000);
   };
 
+  const goNext = () => {
+    if (!canNext()) {
+      setError('لطفاً فیلدهای الزامی را تکمیل کنید.');
+      return;
+    }
+    setError('');
+    if (step === 0) setServiceId('');
+    setStep((s) => s + 1);
+  };
+
+  const goBack = () => {
+    setError('');
+    if (step === 1) setServiceId('');
+    setStep((s) => s - 1);
+  };
+
   return (
     <div className="space-y-5 max-w-2xl mx-auto">
+      <div className="flex items-center gap-3 p-4 rounded-lg bg-slate-900 text-white">
+        <Building2 className="w-8 h-8 text-amber-400 shrink-0" />
+        <div>
+          <p className="text-[10px] text-slate-400">سقف هلدینگ / Tenant</p>
+          <p className="text-sm font-bold">{tenantName}</p>
+          <p className="text-[10px] text-slate-400 mt-0.5">ابتدا دسته را انتخاب کنید، سپس خدمت همان دسته</p>
+        </div>
+      </div>
+
       <PageHeader
         title="ثبت درخواست خدمت"
-        description="انتخاب خدمت → تکمیل اطلاعات → بارگذاری مدارک → ثبت نهایی"
+        description="دسته هلدینگ → انتخاب خدمت → اطلاعات → مدارک → ثبت نهایی"
         badge={<Badge tone="blue">Request Wizard</Badge>}
       />
 
@@ -95,28 +141,57 @@ export const RequestWizardPage: React.FC = () => {
 
       {step === 0 && (
         <div className="grid sm:grid-cols-2 gap-3">
-          {services.length === 0 ? (
-            <EmptyState title="خدمتی یافت نشد" description="لطفاً بعداً مراجعه کنید." />
-          ) : (
-            services.map((s: ServiceItem) => (
-              <button
-                key={s.id}
-                onClick={() => setServiceId(s.id)}
-                className={`text-right p-4 rounded-lg border transition-all ${
-                  serviceId === s.id
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30'
-                    : 'border-slate-200 dark:border-slate-800 hover:border-blue-300'
-                }`}
-              >
-                <p className="text-sm font-bold">{s.title}</p>
-                <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">{s.description}</p>
-              </button>
-            ))
-          )}
+          {HOLDING_SERVICE_CATEGORIES.map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => setHoldingCategoryId(cat.id)}
+              className={`text-right p-4 rounded-lg border transition-all ${
+                holdingCategoryId === cat.id
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30'
+                  : 'border-slate-200 dark:border-slate-800 hover:border-blue-300'
+              }`}
+            >
+              <p className="text-sm font-bold">{cat.label}</p>
+              <p className="text-[11px] text-slate-500 mt-1">{cat.desc}</p>
+            </button>
+          ))}
         </div>
       )}
 
       {step === 1 && (
+        <div className="space-y-3">
+          {selectedHolding && (
+            <p className="text-xs text-slate-600">
+              دسته انتخاب‌شده: <strong>{selectedHolding.label}</strong>
+              {' '}— فقط خدمات مرتبط نمایش داده می‌شوند
+            </p>
+          )}
+          <div className="grid sm:grid-cols-2 gap-3">
+            {filteredServices.length === 0 ? (
+              <EmptyState title="خدمتی در این دسته یافت نشد" description="دسته دیگری انتخاب کنید." />
+            ) : (
+              filteredServices.map((s: ServiceItem) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setServiceId(s.id)}
+                  className={`text-right p-4 rounded-lg border transition-all ${
+                    serviceId === s.id
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30'
+                      : 'border-slate-200 dark:border-slate-800 hover:border-blue-300'
+                  }`}
+                >
+                  <p className="text-sm font-bold">{s.title}</p>
+                  <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">{s.description}</p>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {step === 2 && (
         <div className="space-y-3 bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800">
           <div>
             <label className="text-xs font-bold">عنوان درخواست *</label>
@@ -139,15 +214,13 @@ export const RequestWizardPage: React.FC = () => {
         </div>
       )}
 
-      {step === 2 && (
+      {step === 3 && (
         <div className="space-y-4">
           <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-8 text-center space-y-3">
             <Upload className="w-8 h-8 text-blue-600 mx-auto" />
             <p className="text-xs font-bold">بارگذاری مدارک مورد نیاز</p>
             {selected?.requiredDocuments && (
-              <p className="text-[10px] text-slate-500">
-                مدارک: {selected.requiredDocuments.join('، ')}
-              </p>
+              <p className="text-[10px] text-slate-500">مدارک: {selected.requiredDocuments.join('، ')}</p>
             )}
             <label className="inline-block cursor-pointer text-xs text-blue-600 font-bold">
               <input type="file" multiple accept=".pdf,image/*" onChange={(e) => handleFiles(e.target.files)} className="hidden" />
@@ -173,8 +246,10 @@ export const RequestWizardPage: React.FC = () => {
         </div>
       )}
 
-      {step === 3 && selected && (
+      {step === 4 && selected && (
         <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border space-y-2 text-xs">
+          <p><span className="font-bold">هلدینگ:</span> {tenantName}</p>
+          <p><span className="font-bold">دسته:</span> {selectedHolding?.label}</p>
           <p><span className="font-bold">خدمت:</span> {selected.title}</p>
           <p><span className="font-bold">عنوان:</span> {title}</p>
           <p><span className="font-bold">شرح:</span> {description}</p>
@@ -182,7 +257,7 @@ export const RequestWizardPage: React.FC = () => {
         </div>
       )}
 
-      {step === 4 && (
+      {step === 5 && (
         <div className="text-center space-y-3 py-6">
           <Check className="w-12 h-12 text-emerald-500 mx-auto" />
           <p className="text-sm font-bold">آماده ثبت نهایی</p>
@@ -191,28 +266,12 @@ export const RequestWizardPage: React.FC = () => {
       )}
 
       <div className="flex justify-between pt-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={step === 0}
-          onClick={() => setStep((s) => s - 1)}
-        >
+        <Button variant="ghost" size="sm" disabled={step === 0} onClick={goBack}>
           <ChevronRight className="w-4 h-4" />
           قبلی
         </Button>
-        {step < 4 && (
-          <Button
-            size="sm"
-            disabled={!canNext()}
-            onClick={() => {
-              if (!canNext()) {
-                setError('لطفاً فیلدهای الزامی را تکمیل کنید.');
-                return;
-              }
-              setError('');
-              setStep((s) => s + 1);
-            }}
-          >
+        {step < 5 && (
+          <Button size="sm" disabled={!canNext()} onClick={goNext}>
             بعدی
             <ChevronLeft className="w-4 h-4" />
           </Button>
@@ -230,12 +289,14 @@ export const RequestSuccessPage: React.FC = () => {
     caseId?: string;
     workspaceId?: string;
     serviceTitle?: string;
+    holdingCategory?: string;
   }) || {};
 
   return (
     <div className="max-w-md mx-auto text-center space-y-4 py-10">
       <Check className="w-14 h-14 text-emerald-500 mx-auto" />
       <h1 className="text-lg font-black">درخواست با موفقیت ثبت شد</h1>
+      {data.holdingCategory && <p className="text-xs text-slate-500">دسته: {data.holdingCategory}</p>}
       {data.serviceTitle && <p className="text-xs text-slate-500">خدمت: {data.serviceTitle}</p>}
       <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 text-xs space-y-2 text-right font-mono">
         {data.requestId && <p>Request ID: {data.requestId}</p>}
