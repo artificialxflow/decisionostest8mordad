@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import {
   Gavel,
@@ -35,24 +36,54 @@ export const CaseListView: React.FC<CaseListViewProps> = ({
   const { t } = useLanguage();
   const { can } = useAuth();
 
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<'all' | CaseCategory>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') || 'all');
+  const [serviceFilter, setServiceFilter] = useState('all');
+  const [expertFilter, setExpertFilter] = useState('all');
+  const [sortBy, setSortBy] = useState<'newest' | 'deadline' | 'priority'>('newest');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
-  const filteredCases = cases.filter((c) => {
-    if (activeTab !== 'all' && c.category !== activeTab) return false;
-    if (statusFilter !== 'all' && c.status !== statusFilter) return false;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const matchTitle = c.title.toLowerCase().includes(q);
-      const matchNumber = c.caseNumber.toLowerCase().includes(q);
-      const matchParcel = c.realEstateDetails?.parcelMainNumber?.toLowerCase().includes(q) || false;
-      const matchTag = c.tags.some((t) => t.toLowerCase().includes(q));
-      return matchTitle || matchNumber || matchParcel || matchTag;
+  useEffect(() => {
+    const s = searchParams.get('status');
+    if (s) setStatusFilter(s);
+  }, [searchParams]);
+
+  const setStatusWithUrl = (status: string) => {
+    setStatusFilter(status);
+    if (status === 'all') {
+      searchParams.delete('status');
+      setSearchParams(searchParams);
+    } else {
+      setSearchParams({ status });
     }
-    return true;
-  });
+  };
+
+  const filteredCases = [...cases]
+    .filter((c) => {
+      if (activeTab !== 'all' && c.category !== activeTab) return false;
+      if (statusFilter !== 'all' && c.status !== statusFilter) return false;
+      if (serviceFilter !== 'all' && c.serviceId !== serviceFilter) return false;
+      if (expertFilter !== 'all' && c.assignedExpertId !== expertFilter) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchTitle = c.title.toLowerCase().includes(q);
+        const matchNumber = c.caseNumber.toLowerCase().includes(q);
+        const matchParcel = c.realEstateDetails?.parcelMainNumber?.toLowerCase().includes(q) || false;
+        const matchTag = c.tags.some((t) => t.toLowerCase().includes(q));
+        return matchTitle || matchNumber || matchParcel || matchTag;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'deadline') return (b.deadline || '').localeCompare(a.deadline || '');
+      if (sortBy === 'priority') {
+        const order = { high: 0, medium: 1, low: 2 };
+        return order[a.priority] - order[b.priority];
+      }
+      return b.updatedAt.localeCompare(a.updatedAt);
+    });
 
   const hasActiveFilters = searchQuery.trim() !== '' || statusFilter !== 'all' || activeTab !== 'all';
   const isEmptySystem = cases.length === 0;
@@ -61,7 +92,10 @@ export const CaseListView: React.FC<CaseListViewProps> = ({
   const clearFilters = () => {
     setSearchQuery('');
     setStatusFilter('all');
+    setServiceFilter('all');
+    setExpertFilter('all');
     setActiveTab('all');
+    setSearchParams({});
   };
 
   return (
@@ -152,7 +186,7 @@ export const CaseListView: React.FC<CaseListViewProps> = ({
         </div>
 
         {/* Search & Status Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="md:col-span-2 relative">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
             <input
@@ -168,7 +202,7 @@ export const CaseListView: React.FC<CaseListViewProps> = ({
             <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => setStatusWithUrl(e.target.value)}
               className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-1.5 text-xs focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-hidden font-medium"
             >
               <option value="all">همه وضعیت‌ها</option>
@@ -179,6 +213,33 @@ export const CaseListView: React.FC<CaseListViewProps> = ({
               ))}
             </select>
           </div>
+
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+            className="bg-slate-50 border border-slate-200 rounded-md px-3 py-1.5 text-xs font-medium"
+          >
+            <option value="newest">جدیدترین</option>
+            <option value="deadline">Deadline</option>
+            <option value="priority">اولویت</option>
+          </select>
+        </div>
+
+        <div className="flex flex-wrap gap-2 items-center">
+          <select value={expertFilter} onChange={(e) => setExpertFilter(e.target.value)} className="border rounded px-2 py-1 text-[10px]">
+            <option value="all">همه کارشناسان</option>
+            <option value="usr-1">دکتر صادقی</option>
+          </select>
+          {hasActiveFilters && (
+            <>
+              {statusFilter !== 'all' && (
+                <span className="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">{CASE_STATUS_LABELS[statusFilter as CaseStatus]}</span>
+              )}
+              <button type="button" onClick={clearFilters} className="text-[10px] text-red-600 font-bold">
+                پاک کردن همه
+              </button>
+            </>
+          )}
         </div>
       </div>
 

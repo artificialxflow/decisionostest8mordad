@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Scale,
@@ -9,6 +9,9 @@ import {
   Menu,
   Moon,
   Sun,
+  BellRing,
+  Download,
+  WifiOff,
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -20,6 +23,7 @@ import { useAuth } from '../../context/AuthContext';
 import { GlobalSearch } from '../GlobalSearch';
 import { RoleSwitcher } from '../RoleSwitcher';
 import { ROLE_LABELS } from '../../lib/labels';
+import { getTodayReminders } from '../../lib/mock';
 
 interface PlatformNavbarProps {
   mobileOpen: boolean;
@@ -33,13 +37,41 @@ export const PlatformNavbar: React.FC<PlatformNavbarProps> = ({ onToggleMobile }
   const { openNewCase, notifications } = usePlatformData();
   const navigate = useNavigate();
   const unread = notifications.filter((n) => !n.read).length;
+  const todayReminders = getTodayReminders().length;
+  const [showPwaBanner, setShowPwaBanner] = useState(false);
+  const [offlineDemo] = useState(true);
+
+  useEffect(() => {
+    const dismissed = localStorage.getItem('decisionos-pwa-dismiss');
+    if (!dismissed) setShowPwaBanner(true);
+  }, []);
 
   const handleLogout = async () => {
     await logout();
     navigate(ROUTES.login);
   };
 
+  const dismissPwa = () => {
+    localStorage.setItem('decisionos-pwa-dismiss', '1');
+    setShowPwaBanner(false);
+  };
+
   return (
+    <>
+      {showPwaBanner && (
+        <div className="bg-blue-600 text-white text-xs px-4 py-2 flex items-center justify-between gap-2 no-print">
+          <span className="flex items-center gap-2">
+            <Download className="w-4 h-4 shrink-0" />
+            نصب DecisionOS — نسخه نمایشی PWA
+          </span>
+          <div className="flex gap-2 shrink-0">
+            <button type="button" className="font-bold underline" onClick={() => { dismissPwa(); alert('نصب PWA — نسخه نمایشی'); }}>
+              نصب
+            </button>
+            <button type="button" onClick={dismissPwa} aria-label="بستن">×</button>
+          </div>
+        </div>
+      )}
     <header className="sticky top-0 z-30 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-xs px-4 md:px-6 py-2.5 flex items-center justify-between no-print h-14">
       <div className="flex items-center gap-3">
         <button
@@ -76,6 +108,12 @@ export const PlatformNavbar: React.FC<PlatformNavbarProps> = ({ onToggleMobile }
       </div>
 
       <div className="flex items-center gap-2">
+        {offlineDemo && (
+          <Badge tone="neutral" className="hidden lg:inline-flex text-[9px]">
+            <WifiOff className="w-3 h-3 ml-0.5" />
+            نسخه نمایشی
+          </Badge>
+        )}
         <RoleSwitcher />
         {isDemoMode && (
           <Badge tone="amber" className="hidden md:inline-flex text-[9px]">نمایشی</Badge>
@@ -103,6 +141,19 @@ export const PlatformNavbar: React.FC<PlatformNavbarProps> = ({ onToggleMobile }
             </button>
           ))}
         </div>
+
+        <button
+          onClick={() => navigate(ROUTES.reminders)}
+          className="relative p-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md"
+          title="یادآورها"
+        >
+          <BellRing className="w-4 h-4" />
+          {todayReminders > 0 && (
+            <span className="absolute -top-0.5 -left-0.5 bg-amber-500 text-white text-[9px] font-bold px-1 rounded-full min-w-[14px] text-center">
+              {todayReminders}
+            </span>
+          )}
+        </button>
 
         <button
           onClick={() => navigate(ROUTES.notifications)}
@@ -146,5 +197,6 @@ export const PlatformNavbar: React.FC<PlatformNavbarProps> = ({ onToggleMobile }
         )}
       </div>
     </header>
+    </>
   );
 };

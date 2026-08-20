@@ -1,0 +1,11 @@
+{
+  "name": "DecisionOS",
+  "short_name": "DecisionOS",
+  "description": "پلتفرم مدیریت پرونده حقوقی و ملکی",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
+  "lang": "fa",
+  "dir": "rtl"
+}

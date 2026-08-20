@@ -1,5 +1,5 @@
-/** نقش‌های پلتفرم DecisionOS — Sprint 2 */
-export type UserRole = 'admin' | 'manager' | 'expert' | 'customer' | 'partner';
+/** نقش‌های پلتفرم DecisionOS — Sprint 2+ */
+export type UserRole = 'admin' | 'manager' | 'expert' | 'customer' | 'partner' | 'ai_agent';
 
 export interface User {
   id: string;
@@ -32,9 +32,16 @@ export type CaseStatus =
   | 'in_progress'
   | 'waiting_customer'
   | 'quality_control'
+  | 'ai_analyzing'
   | 'completed'
   | 'archived'
   | 'cancelled';
+
+export type DocumentAnalysisStatus =
+  | 'analysis_complete'
+  | 'analysis_incomplete'
+  | 'needs_clarification'
+  | 'mismatch';
 
 export type CasePriority = 'high' | 'medium' | 'low';
 
@@ -309,13 +316,58 @@ export interface Invoice {
   description?: string;
 }
 
+export interface PlatformSubTask {
+  id: string;
+  title: string;
+  done: boolean;
+}
+
 export interface PlatformTask {
   id: string;
   title: string;
   workspaceId?: string;
   caseId?: string;
   assigneeId?: string;
+  assigneeName?: string;
   status: 'todo' | 'doing' | 'done';
   dueDate?: string;
   priority: CasePriority;
+  subTasks?: PlatformSubTask[];
+}
+
+export interface CaseComment {
+  id: string;
+  caseId: string;
+  authorName: string;
+  authorRole: UserRole;
+  content: string;
+  timestamp: string;
+  visibility: 'internal' | 'customer';
+  replyToId?: string;
+  mentions?: string[];
+}
+
+export interface ReminderItem {
+  id: string;
+  title: string;
+  dueDate: string;
+  caseId?: string;
+  caseTitle?: string;
+  done: boolean;
+}
+
+export interface CalendarEventItem {
+  id: string;
+  title: string;
+  date: string;
+  type: 'deadline' | 'meeting' | 'reminder' | 'task';
+  caseId?: string;
+  workspaceId?: string;
+}
+
+export interface SatisfactionRecord {
+  caseId: string;
+  rating: number;
+  comment?: string;
+  submittedAt: string;
 }

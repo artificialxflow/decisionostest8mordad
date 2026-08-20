@@ -128,7 +128,7 @@ export const DocumentLoopPanel: React.FC<DocumentLoopPanelProps> = ({ caseId, on
 };
 
 export const CaseStatusBar: React.FC<{ currentStatus: string }> = ({ currentStatus }) => {
-  const steps = ['new', 'waiting_docs', 'under_review', 'in_progress', 'quality_control', 'completed'] as const;
+  const steps = ['new', 'waiting_docs', 'under_review', 'in_progress', 'ai_analyzing', 'quality_control', 'completed'] as const;
   const idx = steps.indexOf(currentStatus as (typeof steps)[number]);
 
   return (

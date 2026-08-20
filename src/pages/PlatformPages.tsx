@@ -8,6 +8,7 @@ import { AuditLogsView } from '../components/AuditLogsView';
 import { PricingView } from '../components/PricingView';
 import { AboutView } from '../components/AboutView';
 import { FeaturePage } from './PlaceholderPages';
+import { AiChatPanel } from '../components/AiChatPanel';
 import { apiUrl } from '../lib/api';
 import { ROUTES } from '../routes';
 import { PageHeader, Badge, Button } from '../components/ui';
@@ -78,58 +79,11 @@ export const ChatPage: React.FC = () => (
   <FeaturePage
     title="چت AI"
     description="دستیار هوشمند پرونده، اسناد و سؤالات حقوقی"
-    purpose="چت AI به مشتری و کارشناس کمک می‌کند سؤالات پرونده را بپرسد، خلاصه اسناد را ببیند و پیش‌نویس پاسخ دریافت کند. در Sprint Backend به RAG و OCR واقعی متصل می‌شود؛ فعلاً UI و فلو نمایشی است."
+    purpose="چت AI به مشتری و کارشناس کمک می‌کند سؤالات پرونده را بپرسد. پاسخ‌ها نمایشی هستند — Sprint Backend به RAG واقعی متصل می‌شود."
     featureKey="chat"
-    futureFlow={[
-      'انتخاب پرونده یا سند برای context',
-      'پرسش به زبان طبیعی',
-      'پاسخ با ارجاع به بند سند',
-      'خلاصه‌سازی و پیش‌نویس لایحه',
-    ]}
+    demoUI
   >
-    <div className="grid md:grid-cols-2 gap-4">
-      <div className="bg-white dark:bg-slate-900 border rounded-lg p-5 space-y-3">
-        <div className="flex items-center gap-2">
-          <Bot className="w-5 h-5 text-blue-600" />
-          <h3 className="text-sm font-bold">گفتگوی نمایشی</h3>
-        </div>
-        <div className="space-y-2 text-xs">
-          <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 text-right">
-            <p className="text-slate-500 text-[10px] mb-1">شما</p>
-            <p>آیا سند مبایعه‌نامه برای ثبت شرکت کافی است؟</p>
-          </div>
-          <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-right border border-blue-100 dark:border-blue-900">
-            <p className="text-blue-600 text-[10px] mb-1 flex items-center gap-1">
-              <Sparkles className="w-3 h-3" /> AI (mock)
-            </p>
-            <p>برای ثبت شرکت معمولاً به اساسنامه، آگهی تأسیس و مدارک هویتی شرکا نیز نیاز است. مبایعه‌نامه تنها برای اثبات محل فعالیت کافی نیست.</p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <input
-            className="flex-1 border rounded-md px-3 py-2 text-xs"
-            placeholder="سؤال خود را بنویسید..."
-            disabled
-          />
-          <Button size="sm" disabled>
-            <MessageSquare className="w-3.5 h-3.5" />
-          </Button>
-        </div>
-        <p className="text-[10px] text-slate-400">ورودی غیرفعال — مدل AI در Sprint Backend فعال می‌شود.</p>
-      </div>
-      <div className="space-y-3">
-        {[
-          { title: 'Context پرونده', desc: 'پاسخ بر اساس مدارک و یادداشت‌های همان Case' },
-          { title: 'ارجاع به سند', desc: 'نمایش بند/صفحه مرتبط در پاسخ' },
-          { title: 'Workspace AI', desc: 'دسترسی سریع از تب AI در Workspace پرونده' },
-        ].map((item) => (
-          <div key={item.title} className="p-4 rounded-lg border bg-white dark:bg-slate-900">
-            <p className="text-xs font-bold">{item.title}</p>
-            <p className="text-[11px] text-slate-500 mt-1">{item.desc}</p>
-          </div>
-        ))}
-      </div>
-    </div>
+    <AiChatPanel />
   </FeaturePage>
 );
 

@@ -3,6 +3,12 @@ import { Link } from 'react-router-dom';
 import { PageHeader, Badge, Button, EmptyState } from '../components/ui';
 import { ROUTES } from '../routes';
 import { featureBadge } from '../config/features';
+import { SimpleBarChart, SimpleDonutChart } from '../components/charts/SimpleCharts';
+import { MOCK_CASE_TREND, MOCK_DOC_COMPLETION, MOCK_RESOLUTION_DAYS } from '../lib/mock/reports';
+import { getAverageRating } from '../lib/mock/satisfaction';
+import { AutomationRulesList } from '../components/AutomationRulesList';
+import { AutomationRuleBuilder } from '../components/AutomationRuleBuilder';
+import { HoldingDashboard } from '../components/HoldingDashboard';
 
 interface FeaturePageProps {
   title: string;
@@ -74,6 +80,15 @@ export const ContractsPage = () => (
       'امضای دیجیتال و بایگانی',
     ]}
   >
+    <div className="flex flex-wrap gap-2 mb-4 text-[10px]">
+      {['پیش‌نویس', 'بازبینی', 'امضا'].map((step, i) => (
+        <div key={step} className="flex items-center gap-1">
+          <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">{i + 1}</span>
+          <span>{step}</span>
+          {i < 2 && <span className="text-slate-300 mx-1">→</span>}
+        </div>
+      ))}
+    </div>
     <div className="bg-white dark:bg-slate-900 border rounded-lg overflow-hidden">
       <table className="w-full text-xs">
         <thead className="bg-slate-50 dark:bg-slate-800">
@@ -93,6 +108,7 @@ export const ContractsPage = () => (
                 <Badge tone={c.status === 'signed' ? 'green' : c.status === 'review' ? 'blue' : 'neutral'}>
                   {c.status === 'signed' ? 'امضا شده' : c.status === 'review' ? 'در بازبینی' : 'پیش‌نویس'}
                 </Badge>
+                {c.status === 'signed' && <Badge tone="green" className="mr-1">امضای دیجیتال ✓</Badge>}
               </td>
               <td className="p-3 text-slate-400">{c.date}</td>
             </tr>
@@ -103,33 +119,72 @@ export const ContractsPage = () => (
   </FeaturePage>
 );
 
-export const ReportsPage = () => (
-  <FeaturePage
-    title="گزارش‌ها"
-    description="گزارش‌های تحلیلی پرونده، Workspace و BI سازمانی"
-    purpose="داشبورد BI برای مدیران و هلدینگ‌ها: تعداد پرونده به تفکیک خدمت، زمان میانگین رسیدگی، نرخ تکمیل مدارک و درآمد. فعلاً نمودارهای نمایشی — اتصال داده واقعی در Sprint Backend."
-    demoUI
-    futureFlow={['فیلتر بازه زمانی', 'خروجی PDF/Excel', 'گزارش سفارشی', 'داشبورد هلدینگ']}
-  >
-    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-      {[
-        { label: 'پرونده فعال', value: '۱۲', trend: '+۳' },
-        { label: 'میانگین رسیدگی', value: '۸ روز', trend: '-۱' },
-        { label: 'نرخ تکمیل مدارک', value: '۸۷٪', trend: '+۵٪' },
-        { label: 'درآمد ماه', value: '۴۲M', trend: '+۱۲٪' },
-      ].map((s) => (
-        <div key={s.label} className="p-4 rounded-lg border bg-white dark:bg-slate-900">
-          <p className="text-[10px] text-slate-500">{s.label}</p>
-          <p className="text-xl font-black mt-1">{s.value}</p>
-          <p className="text-[10px] text-emerald-600 mt-1">{s.trend}</p>
-        </div>
-      ))}
-    </div>
-    <div className="h-48 rounded-lg border bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-xs text-slate-400">
-      نمودار BI — Placeholder
-    </div>
-  </FeaturePage>
-);
+export const ReportsPage = () => {
+  const [tab, setTab] = useState<'ops' | 'holding'>('ops');
+  const [range, setRange] = useState('6m');
+  const [exportToast, setExportToast] = useState('');
+
+  const exportMock = (type: string) => {
+    setExportToast(`خروجی ${type} — نسخه نمایشی`);
+    setTimeout(() => setExportToast(''), 2000);
+  };
+
+  return (
+    <FeaturePage
+      title="گزارش‌ها"
+      description="گزارش‌های تحلیلی پرونده، Workspace و BI سازمانی"
+      purpose="داشبورد BI برای مدیران: KPI، نمودار و export. داده mock."
+      demoUI
+    >
+      {exportToast && <div className="text-xs bg-emerald-100 text-emerald-800 p-2 rounded">{exportToast}</div>}
+      <div className="flex flex-wrap gap-2 items-center">
+        <button type="button" onClick={() => setTab('ops')} className={`text-xs px-3 py-1 rounded ${tab === 'ops' ? 'bg-blue-600 text-white' : 'border'}`}>عملیاتی</button>
+        <button type="button" onClick={() => setTab('holding')} className={`text-xs px-3 py-1 rounded ${tab === 'holding' ? 'bg-blue-600 text-white' : 'border'}`}>نمای هلدینگ</button>
+        <select value={range} onChange={(e) => setRange(e.target.value)} className="text-xs border rounded px-2 py-1 mr-auto">
+          <option value="1m">۱ ماه</option>
+          <option value="6m">۶ ماه</option>
+          <option value="1y">۱ سال</option>
+        </select>
+        <Button size="sm" variant="outline" onClick={() => exportMock('PDF')}>PDF</Button>
+        <Button size="sm" variant="outline" onClick={() => exportMock('Excel')}>Excel</Button>
+      </div>
+      {tab === 'holding' ? (
+        <HoldingDashboard />
+      ) : (
+        <>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {[
+              { label: 'پرونده فعال', value: '۱۲', trend: '+۳' },
+              { label: 'میانگین رسیدگی', value: '۸ روز', trend: '-۱' },
+              { label: 'نرخ تکمیل مدارک', value: '۸۷٪', trend: '+۵٪' },
+              { label: 'رضایت', value: `${getAverageRating()} ⭐`, trend: '+۰.۲' },
+            ].map((s) => (
+              <div key={s.label} className="p-4 rounded-lg border bg-white dark:bg-slate-900">
+                <p className="text-[10px] text-slate-500">{s.label}</p>
+                <p className="text-xl font-black mt-1">{s.value}</p>
+                <p className="text-[10px] text-emerald-600 mt-1">{s.trend}</p>
+              </div>
+            ))}
+          </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="p-4 border rounded-lg bg-white dark:bg-slate-900">
+              <p className="text-xs font-bold mb-2">روند پرونده</p>
+              <SimpleBarChart data={MOCK_CASE_TREND.map((d) => ({ label: d.label, value: d.value }))} />
+            </div>
+            <div className="p-4 border rounded-lg bg-white dark:bg-slate-900">
+              <p className="text-xs font-bold mb-2">تکمیل مدارک</p>
+              <SimpleDonutChart data={MOCK_DOC_COMPLETION.map((d) => ({ label: d.label, value: d.value }))} />
+            </div>
+          </div>
+          <div className="p-4 border rounded-lg bg-white dark:bg-slate-900">
+            <p className="text-xs font-bold mb-2">زمان رسیدگی (روز)</p>
+            <SimpleBarChart data={MOCK_RESOLUTION_DAYS.map((d) => ({ label: d.label, value: d.days }))} />
+          </div>
+        </>
+      )}
+    </FeaturePage>
+  );
+};
 
 export const SubscriptionPage = () => (
   <div className="space-y-5">
@@ -166,7 +221,15 @@ export const SubscriptionPage = () => (
   </div>
 );
 
-export const BillingPage = () => (
+const MOCK_INVOICES = [
+  { id: 'INV-001', amount: '۴,۵۰۰,۰۰۰', status: 'paid' as const, date: '۱۴۰۳/۰۵/۰۱' },
+  { id: 'INV-002', amount: '۲,۱۰۰,۰۰۰', status: 'pending' as const, date: '۱۴۰۳/۰۵/۱۰' },
+];
+
+export const BillingPage = () => {
+  const [selected, setSelected] = useState<(typeof MOCK_INVOICES)[0] | null>(null);
+
+  return (
   <FeaturePage
     title="صورتحساب"
     description="فاکتورها، پرداخت‌ها و تاریخچه مالی"
@@ -175,20 +238,35 @@ export const BillingPage = () => (
     futureFlow={['صدور فاکتور از پرونده', 'پرداخت آنلاین', 'رسید PDF', 'گزارش مالیاتی']}
   >
     <div className="space-y-2">
-      {[
-        { id: 'INV-001', amount: '۴,۵۰۰,۰۰۰', status: 'paid', date: '۱۴۰۳/۰۵/۰۱' },
-        { id: 'INV-002', amount: '۲,۱۰۰,۰۰۰', status: 'pending', date: '۱۴۰۳/۰۵/۱۰' },
-      ].map((inv) => (
-        <div key={inv.id} className="flex items-center justify-between p-3 rounded-lg border bg-white dark:bg-slate-900 text-xs">
+      {MOCK_INVOICES.map((inv) => (
+        <button
+          key={inv.id}
+          type="button"
+          onClick={() => setSelected(inv)}
+          className="w-full flex items-center justify-between p-3 rounded-lg border bg-white dark:bg-slate-900 text-xs hover:border-blue-400 text-right"
+        >
           <span className="font-bold">{inv.id}</span>
           <span>{inv.amount} تومان</span>
           <Badge tone={inv.status === 'paid' ? 'green' : 'amber'}>{inv.status === 'paid' ? 'پرداخت شده' : 'در انتظار'}</Badge>
           <span className="text-slate-400">{inv.date}</span>
-        </div>
+        </button>
       ))}
     </div>
+    {selected && (
+      <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setSelected(null)}>
+        <div className="bg-white dark:bg-slate-900 rounded-xl p-5 max-w-sm w-full space-y-3 text-xs" onClick={(e) => e.stopPropagation()}>
+          <h3 className="font-bold text-sm">جزئیات فاکتور {selected.id}</h3>
+          <p>مبلغ: {selected.amount} تومان</p>
+          <p>وضعیت: {selected.status === 'paid' ? 'پرداخت شده' : 'در انتظار'}</p>
+          <p>تاریخ: {selected.date}</p>
+          <p className="text-slate-500">شرح: خدمات مشاوره حقوقی — پرونده نمونه (mock)</p>
+          <Button size="sm" className="w-full" onClick={() => setSelected(null)}>بستن</Button>
+        </div>
+      </div>
+    )}
   </FeaturePage>
-);
+  );
+};
 
 export const SupportPage = () => {
   const [submitted, setSubmitted] = useState(false);
@@ -230,29 +308,29 @@ export const SupportPage = () => {
   );
 };
 
-export const AutomationPage = () => (
-  <FeaturePage
-    title="اتوماسیون"
-    description="پرسش‌وپاسخ هوشمند، NDST و گردش کار خودکار"
-    purpose="بخش اتوماسیون برای پاسخ به سؤالات تکراری، راهنمای ثبت‌نام و در آینده تحلیل مدارک با AI. NDST (Need Detection & Smart Triage) موضوع مشکل مشتری را تشخیص و به دسته مناسب هدایت می‌کند."
-    demoUI
-    futureFlow={[
-      'تشخیص موضوع: قرارداد؟ بیمه؟ حسابداری؟',
-      'پرسش‌وپاسخ از FAQ داخلی',
-      'ارجاع به Expert در صورت نیاز',
-      'خلاصه‌سازی چند Agent AI',
-    ]}
-  >
-    <div className="grid sm:grid-cols-2 gap-3">
-      {['NDST — تشخیص نیاز', 'FAQ Bot', 'Document Q&A', 'Notification Rules'].map((item) => (
-        <div key={item} className="p-4 rounded-lg border bg-white dark:bg-slate-900 flex items-center justify-between">
-          <span className="text-xs font-bold">{item}</span>
-          <Badge tone="amber">به‌زودی</Badge>
-        </div>
-      ))}
-    </div>
-  </FeaturePage>
-);
+export const AutomationPage = () => {
+  const [showBuilder, setShowBuilder] = useState(false);
+  const [, refresh] = useState(0);
+
+  return (
+    <FeaturePage
+      title="اتوماسیون"
+      description="پرسش‌وپاسخ هوشمند، NDST و گردش کار خودکار"
+      purpose="اتوماسیون برای پاسخ تکراری، triage و rule-based actions. NDST موضوع مشکل را تشخیص می‌دهد."
+      demoUI
+    >
+      <div className="p-4 border rounded-lg bg-slate-50 dark:bg-slate-800/50 text-xs mb-4">
+        <p className="font-bold mb-2">NDST Flow</p>
+        <p className="text-slate-600">درخواست → تشخیص موضوع (قرارداد/بیمه/…) → FAQ یا ارجاع Expert</p>
+      </div>
+      <AutomationRulesList key={refresh} />
+      <Button size="sm" className="mt-3" onClick={() => setShowBuilder(!showBuilder)}>
+        {showBuilder ? 'بستن سازنده' : 'Rule جدید'}
+      </Button>
+      {showBuilder && <AutomationRuleBuilder onCreated={() => refresh((x) => x + 1)} />}
+    </FeaturePage>
+  );
+};
 
 export const SettingsPage = () => (
   <div className="space-y-5">

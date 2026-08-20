@@ -67,6 +67,13 @@ const DEMO_ROLE_USERS: Record<UserRole, User> = {
   expert: DEMO_USERS['sadeghi@decisionos.ir'].user,
   customer: DEMO_USERS['client@pars-omid.ir'].user,
   partner: DEMO_USERS['partner@decisionos.ir'].user,
+  ai_agent: {
+    id: 'usr-ai',
+    name: 'DecisionOS AI',
+    email: 'ai@decisionos.ir',
+    role: 'ai_agent',
+    organization: 'سیستم',
+  },
 };
 
 export function getDemoUserForRole(role: UserRole): User {
@@ -145,6 +152,8 @@ export function getPostLoginRoute(role: UserRole): string {
       return '/app/admin/services';
     case 'manager':
       return '/app/dashboard';
+    case 'ai_agent':
+      return '/app/ai-queue';
     default:
       return '/app/dashboard';
   }

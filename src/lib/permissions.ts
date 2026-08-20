@@ -44,9 +44,17 @@ export type RouteKey =
   | 'experts'
   | 'adminServices'
   | 'requests'
+  | 'requestsList'
   | 'workflows'
   | 'automation'
-  | 'organizations';
+  | 'organizations'
+  | 'calendar'
+  | 'reminders'
+  | 'adminMonitoring'
+  | 'adminIntegrations'
+  | 'adminAiPrep'
+  | 'adminKnowledge'
+  | 'aiQueue';
 
 const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   admin: [
@@ -132,6 +140,13 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'view_services',
     'view_experts',
   ],
+  ai_agent: [
+    'view_dashboard',
+    'view_cases',
+    'view_documents',
+    'view_tasks',
+    'view_notifications',
+  ],
 };
 
 const ROUTE_PERMISSIONS: Record<RouteKey, Permission> = {
@@ -153,9 +168,17 @@ const ROUTE_PERMISSIONS: Record<RouteKey, Permission> = {
   experts: 'view_experts',
   adminServices: 'manage_services',
   requests: 'view_requests',
+  requestsList: 'view_requests',
   workflows: 'view_admin',
   automation: 'view_dashboard',
   organizations: 'view_admin',
+  calendar: 'view_tasks',
+  reminders: 'view_tasks',
+  adminMonitoring: 'view_admin',
+  adminIntegrations: 'view_admin',
+  adminAiPrep: 'view_admin',
+  adminKnowledge: 'view_admin',
+  aiQueue: 'view_dashboard',
 };
 
 export function hasPermission(role: UserRole | null | undefined, permission: Permission): boolean {

@@ -7,29 +7,55 @@ import {
   Bell,
   CheckSquare,
   Clock,
-  ChevronLeft,
   ClipboardList,
+  BellRing,
+  Users,
+  Sparkles,
 } from 'lucide-react';
 import { PageHeader, Badge, Button, EmptyState } from '../components/ui';
 import { usePlatformData } from '../components/layout/PlatformLayout';
 import { useAuth } from '../context/AuthContext';
 import { ROUTES } from '../routes';
 import { apiUrl } from '../lib/api';
-import { getMockTasks, getMockRequests } from '../lib/mock';
+import { getMockTasks, getMockRequests, getTodayReminders } from '../lib/mock';
 import { featureBadge } from '../config/features';
 import { CASE_STATUS_LABELS } from '../lib/labels';
 
 export const DashboardPage: React.FC = () => {
   const { cases, documents, notifications, workspaces, openNewCase, user } = usePlatformData();
-  const { can } = useAuth();
+  const { can, user: authUser } = useAuth();
   const navigate = useNavigate();
   const [subscription, setSubscription] = useState<{ plan: string; status: string } | null>(null);
+  const role = authUser?.role || user?.role || 'customer';
 
   const activeCases = cases.filter((c) => !['completed', 'archived', 'cancelled'].includes(c.status));
   const unread = notifications.filter((n) => !n.read);
   const tasks = getMockTasks();
   const requests = getMockRequests();
+  const todayReminders = getTodayReminders();
   const aiBadge = featureBadge('aiAnalysis');
+
+  const roleKpis =
+    role === 'customer'
+      ? [
+          { label: 'درخواست‌های من', value: requests.length, icon: ClipboardList },
+          { label: 'پرونده فعال', value: activeCases.length, icon: Gavel },
+          { label: 'اسناد', value: documents.length, icon: FileText },
+          { label: 'اعلان', value: unread.length, icon: Bell },
+        ]
+      : role === 'expert'
+        ? [
+            { label: 'پرونده محول', value: activeCases.length, icon: Gavel },
+            { label: 'Tasks باز', value: tasks.filter((t) => t.status !== 'done').length, icon: CheckSquare },
+            { label: 'یادآور امروز', value: todayReminders.length, icon: BellRing },
+            { label: 'اسناد', value: documents.length, icon: FileText },
+          ]
+        : [
+            { label: 'درخواست جدید', value: requests.length, icon: ClipboardList },
+            { label: 'پرونده فعال', value: activeCases.length, icon: Gavel },
+            { label: 'Tasks', value: tasks.filter((t) => t.status !== 'done').length, icon: CheckSquare },
+            { label: 'اعلان', value: unread.length, icon: Bell },
+          ];
 
   useEffect(() => {
     fetch(apiUrl('/subscriptions'))
@@ -69,14 +95,8 @@ export const DashboardPage: React.FC = () => {
         }
       />
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        {[
-          { label: 'درخواست جدید', value: requests.length, icon: ClipboardList },
-          { label: 'پرونده فعال', value: activeCases.length, icon: Gavel },
-          { label: 'اسناد', value: documents.length, icon: FileText },
-          { label: 'Tasks', value: tasks.filter((t) => t.status !== 'done').length, icon: CheckSquare },
-          { label: 'اعلان', value: unread.length, icon: Bell },
-        ].map((w) => (
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {roleKpis.map((w) => (
           <div key={w.label} className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
             <w.icon className="w-4 h-4 text-blue-600 mb-2" />
             <div className="text-2xl font-black">{w.value}</div>
@@ -84,6 +104,32 @@ export const DashboardPage: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {(role === 'manager' || role === 'admin') && (
+        <div className="p-4 rounded-lg border bg-blue-50/50 dark:bg-blue-950/20 flex items-center gap-3 text-xs">
+          <Users className="w-5 h-5 text-blue-600 shrink-0" />
+          <div>
+            <p className="font-bold">نمای مدیریتی</p>
+            <p className="text-slate-500">{requests.filter((r) => r.status === 'submitted').length} درخواست در انتظار · {workspaces.length} Workspace</p>
+          </div>
+          <Button size="sm" variant="outline" className="mr-auto" onClick={() => navigate(ROUTES.requestsList)}>
+            لیست درخواست‌ها
+          </Button>
+        </div>
+      )}
+
+      {role === 'ai_agent' && (
+        <div className="p-4 rounded-lg border bg-violet-50/50 dark:bg-violet-950/20 flex items-center gap-3 text-xs">
+          <Sparkles className="w-5 h-5 text-violet-600 shrink-0" />
+          <div>
+            <p className="font-bold">نقش AI Agent — demo</p>
+            <p className="text-slate-500">پرونده‌های در صف تحلیل و Draft Review</p>
+          </div>
+          <Button size="sm" className="mr-auto" onClick={() => navigate(ROUTES.aiQueue)}>
+            صف تحلیل
+          </Button>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {quickActions.map((a) =>
@@ -128,10 +174,16 @@ export const DashboardPage: React.FC = () => {
               <EmptyState title="اشتراک فعال نیست" description="—" />
             )}
           </div>
-          {aiBadge && (
+          {aiBadge ? (
             <div className="bg-white dark:bg-slate-900 rounded-lg border p-4 text-center">
               <Badge tone="amber">{aiBadge}</Badge>
-              <p className="text-[10px] text-slate-500 mt-2">تحلیل AI در Sprint بعد</p>
+              <p className="text-[10px] text-slate-500 mt-2">تحلیل AI — نسخه نمایشی</p>
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-slate-900 rounded-lg border p-4 text-center">
+              <Sparkles className="w-5 h-5 text-violet-600 mx-auto mb-1" />
+              <p className="text-[10px] font-bold">AI فعال</p>
+              <Link to={ROUTES.chat} className="text-[10px] text-blue-600 font-bold">چت AI →</Link>
             </div>
           )}
         </div>

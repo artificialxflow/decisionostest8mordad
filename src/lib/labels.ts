@@ -36,6 +36,7 @@ export const CASE_STATUS_LABELS: Record<CaseStatus, string> = {
   in_progress: 'در حال انجام',
   waiting_customer: 'در انتظار مشتری',
   quality_control: 'کنترل کیفیت',
+  ai_analyzing: 'تحلیل AI',
   completed: 'تکمیل',
   archived: 'بایگانی',
   cancelled: 'لغو',
@@ -48,6 +49,7 @@ export const CASE_STATUS_COLORS: Record<CaseStatus, string> = {
   in_progress: 'bg-cyan-50 text-cyan-800 border-cyan-200',
   waiting_customer: 'bg-orange-50 text-orange-800 border-orange-200',
   quality_control: 'bg-pink-50 text-pink-800 border-pink-200',
+  ai_analyzing: 'bg-violet-50 text-violet-800 border-violet-200',
   completed: 'bg-emerald-50 text-emerald-800 border-emerald-200',
   archived: 'bg-slate-200 text-slate-600 border-slate-300',
   cancelled: 'bg-red-50 text-red-800 border-red-200',
@@ -60,6 +62,7 @@ export const ALL_CASE_STATUSES: CaseStatus[] = [
   'in_progress',
   'waiting_customer',
   'quality_control',
+  'ai_analyzing',
   'completed',
   'archived',
   'cancelled',
@@ -69,10 +72,11 @@ export const ALL_CASE_STATUSES: CaseStatus[] = [
 export const CASE_STATUS_TRANSITIONS: Partial<Record<CaseStatus, CaseStatus[]>> = {
   new: ['waiting_docs', 'under_review', 'cancelled'],
   waiting_docs: ['under_review', 'cancelled'],
-  under_review: ['in_progress', 'waiting_docs', 'cancelled'],
-  in_progress: ['waiting_customer', 'quality_control', 'cancelled'],
+  under_review: ['in_progress', 'waiting_docs', 'ai_analyzing', 'cancelled'],
+  in_progress: ['waiting_customer', 'quality_control', 'ai_analyzing', 'cancelled'],
   waiting_customer: ['in_progress', 'cancelled'],
   quality_control: ['completed', 'in_progress'],
+  ai_analyzing: ['under_review', 'in_progress', 'waiting_customer'],
   completed: ['archived'],
   archived: [],
   cancelled: [],
@@ -84,6 +88,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   expert: 'کارشناس',
   customer: 'مشتری',
   partner: 'شریک',
+  ai_agent: 'AI Agent',
 };
 
 export type LegacyUserRole =
@@ -123,3 +128,11 @@ export const DOCUMENT_STATUS_LABELS = {
   incomplete: 'ناقص',
   needs_clarification: 'نیاز به توضیح',
 } as const;
+
+export const REQUEST_STATUS_LABELS: Record<string, string> = {
+  draft: 'پیش‌نویس',
+  submitted: 'ارسال شده',
+  reviewing: 'در حال بررسی',
+  approved: 'تأیید شده',
+  rejected: 'رد شده',
+};

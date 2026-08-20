@@ -16,8 +16,8 @@ import { PageHeader, Badge, Button, EmptyState } from '../components/ui';
 import { usePlatformData } from '../components/layout/PlatformLayout';
 import { ROUTES } from '../routes';
 import { TimelineFeed } from '../components/TimelineEvent';
-import { getMockTimelineEvents, getMockTasks, addMockTask, updateMockTask } from '../lib/mock';
-import { CASE_STATUS_LABELS, CASE_STATUS_COLORS, TASK_STATUS_LABELS } from '../lib/labels';
+import { getMockTimelineEvents, getMockTasks, addMockTask, updateMockTask, toggleSubTask, isTaskOverdue } from '../lib/mock';
+import { CASE_STATUS_LABELS, CASE_STATUS_COLORS, TASK_STATUS_LABELS, PRIORITY_LABELS } from '../lib/labels';
 import { featureBadge } from '../config/features';
 import { PlatformTask } from '../types';
 import { useAuth } from '../context/AuthContext';
@@ -247,6 +247,16 @@ function TasksTab({
 }) {
   const { can } = useAuth();
   const [title, setTitle] = useState('');
+  const [priority, setPriority] = useState<PlatformTask['priority']>('medium');
+  const [dueDate, setDueDate] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterPriority, setFilterPriority] = useState<string>('all');
+  const [loading, setLoading] = useState(true);
+
+  React.useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 400);
+    return () => clearTimeout(t);
+  }, []);
 
   const addTask = () => {
     if (!title.trim() || !can('manage_tasks')) return;
@@ -255,11 +265,30 @@ function TasksTab({
       workspaceId,
       caseId,
       status: 'todo',
-      priority: 'medium',
+      priority,
+      dueDate: dueDate || undefined,
+      assigneeName: 'کارشناس',
     });
     onChange([...tasks, t]);
     setTitle('');
+    setDueDate('');
   };
+
+  const filtered = tasks.filter((t) => {
+    if (filterStatus !== 'all' && t.status !== filterStatus) return false;
+    if (filterPriority !== 'all' && t.priority !== filterPriority) return false;
+    return true;
+  });
+
+  if (loading) {
+    return (
+      <div className="space-y-2 animate-pulse">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-16 bg-slate-100 dark:bg-slate-800 rounded-md" />
+        ))}
+      </div>
+    );
+  }
 
   if (tasks.length === 0 && !can('manage_tasks')) {
     return <EmptyState title="تسکی ثبت نشده" />;
@@ -267,34 +296,79 @@ function TasksTab({
 
   return (
     <div className="space-y-3">
+      <div className="flex flex-wrap gap-2">
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="border rounded px-2 py-1 text-[10px]">
+          <option value="all">همه وضعیت‌ها</option>
+          <option value="todo">To Do</option>
+          <option value="doing">In Progress</option>
+          <option value="done">Done</option>
+        </select>
+        <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} className="border rounded px-2 py-1 text-[10px]">
+          <option value="all">همه اولویت‌ها</option>
+          <option value="high">بالا</option>
+          <option value="medium">متوسط</option>
+          <option value="low">پایین</option>
+        </select>
+      </div>
       {can('manage_tasks') && (
-        <div className="flex gap-2">
-          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="عنوان task..." className="flex-1 border rounded-md px-3 py-1.5 text-xs" />
+        <div className="flex flex-wrap gap-2 p-3 border rounded-lg bg-slate-50 dark:bg-slate-800/50">
+          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="عنوان task..." className="flex-1 min-w-[120px] border rounded-md px-3 py-1.5 text-xs" />
+          <select value={priority} onChange={(e) => setPriority(e.target.value as PlatformTask['priority'])} className="border rounded px-2 py-1 text-[10px]">
+            <option value="high">بالا</option>
+            <option value="medium">متوسط</option>
+            <option value="low">پایین</option>
+          </select>
+          <input value={dueDate} onChange={(e) => setDueDate(e.target.value)} placeholder="deadline" className="w-24 border rounded-md px-2 py-1.5 text-[10px]" />
           <Button size="sm" onClick={addTask}>افزودن</Button>
         </div>
       )}
-      {tasks.length === 0 ? (
+      {filtered.length === 0 ? (
         <EmptyState title="تسکی نیست" description="اولین task را اضافه کنید." />
       ) : (
-        tasks.map((t) => (
-          <div key={t.id} className="flex items-center justify-between p-3 rounded-md border text-xs">
-            <div>
-              <p className="font-bold">{t.title}</p>
-              <p className="text-[10px] text-slate-500">{t.dueDate || 'بدون deadline'} · {TASK_STATUS_LABELS[t.status]}</p>
+        filtered.map((t) => (
+          <div key={t.id} className="p-3 rounded-md border text-xs space-y-2 bg-white dark:bg-slate-900">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="font-bold flex items-center gap-2 flex-wrap">
+                  {t.title}
+                  <Badge tone={t.priority === 'high' ? 'rose' : t.priority === 'medium' ? 'amber' : 'neutral'}>{PRIORITY_LABELS[t.priority]}</Badge>
+                  {isTaskOverdue(t.dueDate) && t.status !== 'done' && <Badge tone="rose">Overdue</Badge>}
+                </p>
+                <p className="text-[10px] text-slate-500 mt-1">
+                  {t.dueDate || 'بدون deadline'} · {t.assigneeName || '—'} · {TASK_STATUS_LABELS[t.status]}
+                </p>
+              </div>
+              {can('manage_tasks') && (
+                <select
+                  value={t.status}
+                  onChange={(e) => {
+                    const updated = updateMockTask(t.id, { status: e.target.value as PlatformTask['status'] });
+                    if (updated) onChange(tasks.map((x) => (x.id === t.id ? updated : x)));
+                  }}
+                  className="border rounded px-2 py-1 text-[10px]"
+                >
+                  <option value="todo">To Do</option>
+                  <option value="doing">In Progress</option>
+                  <option value="done">Done</option>
+                </select>
+              )}
             </div>
-            {can('manage_tasks') && (
-              <select
-                value={t.status}
-                onChange={(e) => {
-                  const updated = updateMockTask(t.id, { status: e.target.value as PlatformTask['status'] });
-                  if (updated) onChange(tasks.map((x) => (x.id === t.id ? updated : x)));
-                }}
-                className="border rounded px-2 py-1 text-[10px]"
-              >
-                <option value="todo">To Do</option>
-                <option value="doing">In Progress</option>
-                <option value="done">Done</option>
-              </select>
+            {t.subTasks && t.subTasks.length > 0 && (
+              <ul className="mr-3 space-y-1 border-r-2 border-slate-200 pr-2">
+                {t.subTasks.map((st) => (
+                  <li key={st.id} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={st.done}
+                      onChange={() => {
+                        toggleSubTask(t.id, st.id);
+                        onChange(getMockTasks(workspaceId, caseId));
+                      }}
+                    />
+                    <span className={st.done ? 'line-through text-slate-400' : ''}>{st.title}</span>
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
         ))

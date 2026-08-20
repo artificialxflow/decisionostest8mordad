@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import {
   ArrowRight,
@@ -28,6 +29,10 @@ import { TimelineFeed } from './TimelineEvent';
 import { DocumentLoopPanel, CaseStatusBar } from './DocumentLoopPanel';
 import { featureBadge } from '../config/features';
 import { Badge } from './ui';
+import { CaseCommentThread } from './CaseCommentThread';
+import { SatisfactionSurveyModal } from './SatisfactionSurveyModal';
+import { AiAnalysisPanel } from './AiAnalysisPanel';
+import { getSatisfactionForCase } from '../lib/mock/satisfaction';
 
 interface CaseDetailViewProps {
   caseId: string;
@@ -50,8 +55,10 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({
   const [notes, setNotes] = useState<CaseNote[]>([]);
   const [report, setReport] = useState<CaseReport | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'ai' | 'docs' | 'notes' | 'audit'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'ai' | 'docs' | 'notes' | 'comments' | 'audit'>('overview');
   const [isAnalyzingAI, setIsAnalyzingAI] = useState(false);
+  const [showSurvey, setShowSurvey] = useState(false);
+  const [satisfactionDone, setSatisfactionDone] = useState(() => !!getSatisfactionForCase(caseId));
 
   // New Note Modal
   const [showNoteModal, setShowNoteModal] = useState(false);
@@ -74,6 +81,12 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({
   useEffect(() => {
     fetchCaseData();
   }, [caseId]);
+
+  useEffect(() => {
+    if (caseItem?.status === 'completed' && !getSatisfactionForCase(caseId)) {
+      setShowSurvey(true);
+    }
+  }, [caseItem?.status, caseId]);
 
   const handleStatusChange = async (newStatus: CaseStatus) => {
     if (!caseItem || !can('change_case_status')) return;
@@ -278,6 +291,9 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${CASE_STATUS_COLORS[caseItem.status]}`}>
                   {CASE_STATUS_LABELS[caseItem.status]}
                 </span>
+                {satisfactionDone && (
+                  <Badge tone="green">نظر ثبت شد</Badge>
+                )}
               </div>
 
               <h1 className="text-lg md:text-xl font-black text-slate-900 leading-snug">
@@ -343,6 +359,15 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({
               <Bot className="w-4 h-4 text-amber-600" />
               <span>گفتگوی اسناد</span>
             </button>
+            {(caseItem.status === 'ai_analyzing' || caseItem.status === 'quality_control') && (
+              <Link
+                to={`/app/cases/${caseId}/draft-review`}
+                className="bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5"
+              >
+                <FileText className="w-4 h-4" />
+                <span>Draft Review</span>
+              </Link>
+            )}
           </div>
         </div>
 
@@ -393,10 +418,30 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({
             }`}
           >
             <Clock className="w-4 h-4" />
-            <span>یادداشت‌ها و خط زمانی ({notes.length})</span>
+            <span>یادداشت‌ها ({notes.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('comments')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+              activeTab === 'comments'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'bg-blue-50 text-blue-800 hover:bg-blue-100'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4" />
+            <span>ارتباطات</span>
           </button>
         </div>
       </div>
+
+      <SatisfactionSurveyModal
+        caseId={caseId}
+        caseTitle={caseItem.title}
+        open={showSurvey}
+        onClose={() => setShowSurvey(false)}
+        onSubmitted={() => setSatisfactionDone(true)}
+      />
 
       <CaseStatusBar currentStatus={caseItem.status} />
 
@@ -607,6 +652,7 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({
             </div>
           ) : (
             <div className="space-y-6 text-xs text-slate-800">
+              <AiAnalysisPanel caseId={caseId} />
               {/* Summary */}
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
                 <h3 className="font-bold text-slate-900 text-xs border-b border-slate-200 pb-1">
@@ -758,17 +804,34 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({
           </div>
 
           <div className="space-y-3">
-            {notes.map((n) => (
-              <div key={n.id} className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-slate-900">{n.title}</h4>
-                  <span className="text-[10px] text-slate-500">{n.date}</span>
+            {notes.length === 0 ? (
+              <p className="text-xs text-slate-500 text-center py-4">یادداشتی ثبت نشده.</p>
+            ) : (
+              notes.map((n) => (
+                <div key={n.id} className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-slate-900">{n.title}</h4>
+                    <span className="text-[10px] text-slate-500">{n.date}</span>
+                  </div>
+                  <p className="text-xs text-slate-700 leading-relaxed">{n.content}</p>
+                  <div className="text-[10px] text-amber-800 font-medium">نویسنده: {n.authorName}</div>
                 </div>
-                <p className="text-xs text-slate-700 leading-relaxed">{n.content}</p>
-                <div className="text-[10px] text-amber-800 font-medium">نویسنده: {n.authorName}</div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
+          {timelineEvents.length > 0 && (
+            <div className="border-t pt-4">
+              <h4 className="text-xs font-bold mb-3">خط زمانی</h4>
+              <TimelineFeed events={timelineEvents} />
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'comments' && (
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+          <h3 className="text-xs font-bold text-slate-900 border-b border-slate-100 pb-3 mb-4">ارتباطات درون پرونده</h3>
+          <CaseCommentThread caseId={caseId} />
         </div>
       )}
 

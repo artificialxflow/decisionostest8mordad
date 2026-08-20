@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { FileText, Upload, Search, Trash2, Eye, History, Loader2, Download } from 'lucide-react';
+import { FileText, Upload, Search, Trash2, Eye, Loader2, Download } from 'lucide-react';
 import { DocumentItem, CaseItem } from '../types';
 import { Badge, Button, EmptyState } from './ui';
 import { useAuth } from '../context/AuthContext';
 import { featureBadge } from '../config/features';
 import { DOCUMENT_STATUS_LABELS } from '../lib/labels';
+import { DocumentVersionPanel } from './DocumentVersionPanel';
+import { OcrPreviewPanel } from './OcrPreviewPanel';
+import { getDocumentVersions } from '../lib/mock/documents';
 
 interface DocumentCenterViewProps {
   documents: DocumentItem[];
@@ -39,6 +42,11 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
   const [previewDoc, setPreviewDoc] = useState<DocumentItem | null>(null);
   const ocrBadge = featureBadge('ocr');
 
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(''), 2500);
+  };
+
   const handleDownload = (doc: DocumentItem) => {
     const blob = new Blob([`Mock content: ${doc.title}`], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -47,8 +55,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
     a.download = `${doc.title}.txt`;
     a.click();
     URL.revokeObjectURL(url);
-    setToast('دانلود آغاز شد (نمایشی)');
-    setTimeout(() => setToast(''), 2500);
+    showToast('دانلود آغاز شد (نمایشی)');
   };
 
   const filteredDocs = documents.filter((d) => {
@@ -89,8 +96,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
     try {
       await onUploadDocument(selectedCaseId, pending.name.replace(/\.[^.]+$/, ''));
       setPending(null);
-      setToast('فایل ذخیره شد (نمایشی)');
-      setTimeout(() => setToast(''), 2500);
+      showToast('فایل ذخیره شد (نمایشی)');
     } finally {
       setUploading(false);
     }
@@ -110,7 +116,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
             <FileText className="w-5 h-5 text-blue-600" />
             <span>مرکز مدیریت اسناد</span>
           </h1>
-          <p className="text-xs text-slate-500 mt-1">Upload · Preview · Download · Search · Category</p>
+          <p className="text-xs text-slate-500 mt-1">Upload · Preview · OCR · Versioning</p>
         </div>
         <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold px-2.5 py-1 rounded-md border">
           {documents.length} مدرک
@@ -150,6 +156,8 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
           <div className="flex gap-4 items-start">
             {pending.previewUrl ? (
               <img src={pending.previewUrl} alt="preview" className="w-24 h-24 object-cover rounded-md border" />
+            ) : pending.type === 'PDF' ? (
+              <iframe title="pdf-preview" src="about:blank" className="w-24 h-24 rounded-md border bg-slate-100" />
             ) : (
               <div className="w-24 h-24 rounded-md bg-slate-100 flex items-center justify-center text-[10px] font-bold">{pending.type}</div>
             )}
@@ -230,14 +238,17 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
 
       {previewDoc && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setPreviewDoc(null)}>
-          <div className="bg-white dark:bg-slate-900 rounded-lg p-5 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white dark:bg-slate-900 rounded-lg p-5 max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-bold text-sm mb-2">{previewDoc.title}</h3>
-            <p className="text-xs text-slate-500 mb-4">Preview — {previewDoc.fileType} · {previewDoc.fileSize}</p>
-            {previewDoc.previewUrl || previewDoc.fileUrl ? (
-              <img src={previewDoc.previewUrl || previewDoc.fileUrl} alt="" className="max-h-48 mx-auto rounded border" />
-            ) : (
-              <div className="h-32 bg-slate-100 rounded flex items-center justify-center text-xs text-slate-500">پیش‌نمایش فایل</div>
-            )}
+            <p className="text-xs text-slate-500 mb-4">{previewDoc.fileType} · {previewDoc.fileSize}</p>
+            <OcrPreviewPanel documentId={previewDoc.id} />
+            <div className="mt-4 pt-4 border-t">
+              <DocumentVersionPanel
+                documentId={previewDoc.id}
+                versions={getDocumentVersions(previewDoc.id)}
+                onRestore={() => showToast('بازگشت به نسخه قبلی (نمایشی)')}
+              />
+            </div>
             <Button size="sm" className="mt-4 w-full" onClick={() => { handleDownload(previewDoc); setPreviewDoc(null); }}>دانلود</Button>
             <Button size="sm" variant="ghost" className="mt-2 w-full" onClick={() => setPreviewDoc(null)}>بستن</Button>
           </div>

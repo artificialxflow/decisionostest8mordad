@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { PageHeader, Badge } from '../components/ui';
 import { ROUTES } from '../routes';
 import { ArrowLeft, Users, FileCheck, UserCheck, CheckCircle, Archive, XCircle, Share2 } from 'lucide-react';
+import { WorkflowDiagram } from '../components/WorkflowDiagram';
 
 const WORKFLOWS = [
   {
@@ -75,6 +76,11 @@ export const WorkflowsDocPage: React.FC = () => (
 
     <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 text-xs text-amber-900 dark:text-amber-200">
       طبق دستور کارفرما: فعلاً Workflow طراحی نمی‌شود. این صفحه مشخص می‌کند چه workflowهایی در Backend تعریف خواهند شد.
+    </div>
+
+    <div className="bg-white dark:bg-slate-900 border rounded-lg p-5">
+      <p className="text-xs font-bold mb-3">فلو بصری (نمونه waiting_docs)</p>
+      <WorkflowDiagram highlightStatus="waiting_docs" />
     </div>
 
     <div className="bg-white dark:bg-slate-900 border rounded-lg p-5 font-mono text-[10px] text-slate-600 dark:text-slate-400 overflow-x-auto">

@@ -7,7 +7,7 @@ import { ROLE_LABELS } from '../lib/labels';
 import { getPostLoginRoute } from '../lib/mockAuth';
 import { Badge } from './ui';
 
-const ROLES: UserRole[] = ['admin', 'manager', 'expert', 'customer', 'partner'];
+const ROLES: UserRole[] = ['admin', 'manager', 'expert', 'customer', 'partner', 'ai_agent'];
 
 export const RoleSwitcher: React.FC = () => {
   const { user, isDemoMode, demoRole, setDemoRole, clearDemoRole } = useAuth();

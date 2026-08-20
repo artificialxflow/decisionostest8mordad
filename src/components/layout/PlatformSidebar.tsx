@@ -22,6 +22,13 @@ import {
   GitBranch,
   Zap,
   Building2,
+  CalendarDays,
+  BellRing,
+  ListOrdered,
+  Activity,
+  Plug,
+  Database,
+  BookOpen,
 } from 'lucide-react';
 import { ROUTES } from '../../routes';
 import { useAuth } from '../../context/AuthContext';
@@ -55,6 +62,9 @@ const menuGroups: { title: string; items: MenuItem[] }[] = [
       { to: ROUTES.appServices, label: 'خدمات', icon: Briefcase, routeKey: 'services' },
       { to: ROUTES.workspace, label: 'Workspace', icon: FolderKanban, routeKey: 'workspace' },
       { to: ROUTES.requestNew, label: 'ثبت درخواست', icon: ClipboardList, routeKey: 'requests' },
+      { to: ROUTES.requestsList, label: 'لیست درخواست‌ها', icon: ListOrdered, routeKey: 'requestsList' },
+      { to: ROUTES.calendar, label: 'تقویم', icon: CalendarDays, routeKey: 'calendar' },
+      { to: ROUTES.reminders, label: 'یادآورها', icon: BellRing, routeKey: 'reminders' },
     ],
   },
   {
@@ -63,7 +73,7 @@ const menuGroups: { title: string; items: MenuItem[] }[] = [
       { to: ROUTES.cases, label: 'پرونده‌ها', icon: Gavel, routeKey: 'cases', badgeKey: 'cases' },
       { to: ROUTES.documents, label: 'اسناد', icon: FileText, routeKey: 'documents' },
       { to: ROUTES.contracts, label: 'قراردادها', icon: FileSignature, routeKey: 'contracts', featureKey: 'contracts' },
-      { to: ROUTES.chat, label: 'چت AI', icon: Bot, routeKey: 'chat', featureKey: 'chat', showComingSoon: true },
+      { to: ROUTES.chat, label: 'چت AI', icon: Bot, routeKey: 'chat', featureKey: 'chat' },
       { to: ROUTES.reports, label: 'گزارش‌ها', icon: BarChart3, routeKey: 'reports', featureKey: 'bi' },
       { to: ROUTES.automation, label: 'اتوماسیون', icon: Zap, routeKey: 'automation', featureKey: 'aiAnalysis' },
       { to: ROUTES.workflows, label: 'Workflowها', icon: GitBranch, routeKey: 'workflows' },
@@ -78,7 +88,15 @@ const menuGroups: { title: string; items: MenuItem[] }[] = [
     items: [
       { to: ROUTES.adminServices, label: 'مدیریت خدمات', icon: Briefcase, routeKey: 'adminServices' },
       { to: ROUTES.organizations, label: 'سازمان‌ها', icon: Building2, routeKey: 'organizations' },
+      { to: ROUTES.adminMonitoring, label: 'Monitoring', icon: Activity, routeKey: 'adminMonitoring' },
+      { to: ROUTES.adminIntegrations, label: 'یکپارچه‌سازی', icon: Plug, routeKey: 'adminIntegrations' },
+      { to: ROUTES.adminAiPrep, label: 'آماده‌سازی AI', icon: Database, routeKey: 'adminAiPrep' },
+      { to: ROUTES.adminKnowledge, label: 'پایگاه دانش', icon: BookOpen, routeKey: 'adminKnowledge' },
     ],
+  },
+  {
+    title: 'AI Agent',
+    items: [{ to: ROUTES.aiQueue, label: 'صف تحلیل', icon: Bot, routeKey: 'aiQueue' }],
   },
   {
     title: 'حساب',
@@ -170,8 +188,22 @@ export const PlatformSidebar: React.FC<PlatformSidebarProps> = ({
         )}
 
         <nav className="flex-1 overflow-y-auto p-3 space-y-4">
-          {menuGroups.map((group) => {
-            const visibleItems = group.items.filter((item) => canAccessRoute(user?.role, item.routeKey));
+          {menuGroups
+            .filter((group) => {
+              if (group.title === 'AI Agent') {
+                return user?.role === 'ai_agent' || user?.role === 'admin';
+              }
+              if (user?.role === 'ai_agent') {
+                return group.title === 'AI Agent' || group.title === 'عملیات';
+              }
+              return true;
+            })
+            .map((group) => {
+            const items =
+              user?.role === 'ai_agent' && group.title === 'عملیات'
+                ? group.items.filter((item) => item.routeKey === 'cases')
+                : group.items;
+            const visibleItems = items.filter((item) => canAccessRoute(user?.role, item.routeKey));
             if (visibleItems.length === 0) return null;
 
             return (
@@ -179,7 +211,7 @@ export const PlatformSidebar: React.FC<PlatformSidebarProps> = ({
                 <p className="text-[10px] font-bold text-slate-400 px-3 mb-1.5 uppercase tracking-wide">
                   {group.title}
                 </p>
-                <div className="space-y-0.5">{group.items.map(renderItem)}</div>
+                <div className="space-y-0.5">{items.map(renderItem)}</div>
               </div>
             );
           })}

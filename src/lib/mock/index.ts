@@ -1,4 +1,4 @@
-import { ServiceItem, ExpertProfile, PlatformTask, RequestItem, TimelineEventItem } from '../../types';
+import { ServiceItem, ExpertProfile, RequestItem, TimelineEventItem } from '../../types';
 import { MOCK_EXPERTS_FULL } from './experts';
 
 export const MOCK_SERVICES: ServiceItem[] = [
@@ -105,31 +105,57 @@ export const MOCK_EXPERTS: ExpertProfile[] = MOCK_EXPERTS_FULL;
 export { MOCK_EXPERTS_FULL, getExpertById } from './experts';
 export * from './documentLoop';
 export * from './organizations';
+export * from './tasks';
+export * from './calendar';
+export * from './reminders';
+export * from './comments';
+export * from './satisfaction';
+export * from './reports';
+export * from './monitoring';
+export * from './integrations';
+export * from './automationRules';
+export * from './documents';
+export * from './aiChat';
+export * from './aiAnalysis';
+export * from './drafts';
+export * from './knowledge';
+export * from './semanticSearch';
+export * from './aiAgentQueue';
 
-let mockTasks: PlatformTask[] = [
+export {
+  getMockTasks,
+  addMockTask,
+  updateMockTask,
+  toggleSubTask,
+  isTaskOverdue,
+} from './tasks';
+
+let mockRequests: RequestItem[] = [
   {
-    id: 'task-1',
-    title: 'بررسی سند مالکیت',
-    workspaceId: 'ws-1',
+    id: 'req-seed-1',
+    serviceId: 's3',
+    customerId: 'usr-3',
+    title: 'درخواست بررسی سند ملکی',
+    description: 'بررسی ریسک ثبتی',
+    status: 'submitted',
     caseId: 'case-101',
-    assigneeId: 'usr-1',
-    status: 'doing',
-    dueDate: '۱۴۰۳/۰۶/۱۵',
-    priority: 'high',
+    workspaceId: 'ws-1',
+    createdAt: '1403/05/01',
+    updatedAt: '1403/05/01',
   },
   {
-    id: 'task-2',
-    title: 'تماس با مشتری برای تکمیل مدارک',
+    id: 'req-seed-2',
+    serviceId: 's2',
+    customerId: 'usr-3',
+    title: 'تنظیم قرارداد مشارکت',
+    description: 'پیش‌نویس و بازبینی',
+    status: 'reviewing',
+    caseId: 'case-102',
     workspaceId: 'ws-1',
-    caseId: 'case-101',
-    assigneeId: 'usr-2',
-    status: 'todo',
-    dueDate: '۱۴۰۳/۰۶/۱۰',
-    priority: 'medium',
+    createdAt: '1403/05/10',
+    updatedAt: '1403/05/12',
   },
 ];
-
-let mockRequests: RequestItem[] = [];
 
 export function getMockServices(): ServiceItem[] {
   return [...MOCK_SERVICES].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
@@ -137,27 +163,6 @@ export function getMockServices(): ServiceItem[] {
 
 export function getMockExperts(): ExpertProfile[] {
   return [...MOCK_EXPERTS];
-}
-
-export function getMockTasks(workspaceId?: string, caseId?: string): PlatformTask[] {
-  return mockTasks.filter((t) => {
-    if (workspaceId && t.workspaceId !== workspaceId) return false;
-    if (caseId && t.caseId !== caseId) return false;
-    return true;
-  });
-}
-
-export function addMockTask(task: Omit<PlatformTask, 'id'>): PlatformTask {
-  const newTask: PlatformTask = { ...task, id: `task-${Date.now()}` };
-  mockTasks = [...mockTasks, newTask];
-  return newTask;
-}
-
-export function updateMockTask(id: string, patch: Partial<PlatformTask>): PlatformTask | null {
-  const idx = mockTasks.findIndex((t) => t.id === id);
-  if (idx < 0) return null;
-  mockTasks[idx] = { ...mockTasks[idx], ...patch };
-  return mockTasks[idx];
 }
 
 export function getMockRequests(): RequestItem[] {
@@ -243,6 +248,16 @@ export function getMockTimelineEvents(caseId?: string, workspaceId?: string): Ti
       objectType: 'document',
       timestamp: '۱۴۰۳/۰۵/۰۴ — ۱۴:۰۰',
       details: 'پرونده → waiting_docs',
+    },
+    {
+      id: 'tl-ai',
+      caseId: 'case-ai-1',
+      workspaceId: 'ws-1',
+      action: 'تحلیل AI شروع شد',
+      actorName: 'DecisionOS AI',
+      objectType: 'case',
+      timestamp: '۱۴۰۳/۰۶/۱۸ — ۰۸:۰۰',
+      details: 'وضعیت → ai_analyzing',
     },
   ];
 

@@ -11,6 +11,17 @@ import { ServicesPage } from './pages/ServicesPage';
 import { FaqPage } from './pages/FaqPage';
 import { ContactPage } from './pages/ContactPage';
 import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
+import { RequestsListPage } from './pages/RequestsListPage';
+import { CalendarPage, RemindersPage } from './pages/CalendarPage';
+import { DraftReviewPage } from './pages/DraftReviewPage';
+import {
+  MonitoringDashboardPage,
+  IntegrationsPage,
+  AiDataPrepPage,
+  KnowledgeBaseAdminPage,
+  AiQueuePage,
+} from './pages/AdminV4Pages';
 import { DashboardPage } from './pages/DashboardPage';
 import { WorkspacePage } from './pages/WorkspacePage';
 import { ProfilePage } from './pages/ProfilePage';
@@ -43,6 +54,12 @@ import { AutomationPage } from './pages/PlaceholderPages';
 import { BlogListPage, BlogPostPage } from './pages/blog/BlogPages';
 import { ROUTES } from './routes';
 
+function DraftReviewRoute() {
+  const { caseId } = useParams();
+  if (!caseId) return <Navigate to={ROUTES.cases} replace />;
+  return <DraftReviewPage />;
+}
+
 function CaseDetailRoute() {
   const { caseId } = useParams();
   if (!caseId) return <Navigate to={ROUTES.cases} replace />;
@@ -70,7 +87,7 @@ export default function App() {
                 <Route path="blog/:slug" element={<BlogPostPage />} />
                 <Route path={ROUTES.contact} element={<ContactPage />} />
                 <Route path={ROUTES.login} element={<LoginPage />} />
-                <Route path={ROUTES.register} element={<LoginPage />} />
+                <Route path={ROUTES.register} element={<RegisterPage />} />
               </Route>
 
               <Route
@@ -107,6 +124,15 @@ export default function App() {
                 <Route path="admin/services" element={<ServicesAdminPage />} />
                 <Route path="workflows" element={<WorkflowsDocPage />} />
                 <Route path="automation" element={<AutomationPage />} />
+                <Route path="requests" element={<RequestsListPage />} />
+                <Route path="calendar" element={<CalendarPage />} />
+                <Route path="reminders" element={<RemindersPage />} />
+                <Route path="cases/:caseId/draft-review" element={<DraftReviewRoute />} />
+                <Route path="ai-queue" element={<AiQueuePage />} />
+                <Route path="admin/monitoring" element={<MonitoringDashboardPage />} />
+                <Route path="admin/integrations" element={<IntegrationsPage />} />
+                <Route path="admin/ai-prep" element={<AiDataPrepPage />} />
+                <Route path="admin/knowledge" element={<KnowledgeBaseAdminPage />} />
                 <Route path="settings/organizations" element={<OrganizationsPage />} />
               </Route>
 

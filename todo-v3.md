@@ -489,9 +489,11 @@ src/
 
 ---
 
-## Sprint Backend (بعد از تأیید — جدا از این فایل)
+## Sprint بعدی (جدا از این فایل)
 
-وقتی ظاهر تأیید شد، موارد زیر در **`todo-v4-backend.md`** (یا سند جدا) برنامه‌ریزی می‌شود:
+**Frontend v4 (بدون Backend):** [`todo-v4-frontend.md`](todo-v4-frontend.md) — تکمیل UI Sprint 2–5
+
+**Backend (بعد از تأیید UI):** **`todo-v4-backend.md`** — موارد زیر برنامه‌ریزی می‌شود:
 
 - Database + Migration + Seed
 - JWT Auth + RBAC Backend

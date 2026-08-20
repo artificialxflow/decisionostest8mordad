@@ -42,6 +42,15 @@ export const ROUTES = {
   workflows: '/app/workflows',
   automation: '/app/automation',
   organizations: '/app/settings/organizations',
+  requestsList: '/app/requests',
+  calendar: '/app/calendar',
+  reminders: '/app/reminders',
+  draftReview: '/app/cases/:caseId/draft-review',
+  adminMonitoring: '/app/admin/monitoring',
+  adminIntegrations: '/app/admin/integrations',
+  adminAiPrep: '/app/admin/ai-prep',
+  adminKnowledge: '/app/admin/knowledge',
+  aiQueue: '/app/ai-queue',
   blogPost: '/blog/:slug',
 } as const;
 

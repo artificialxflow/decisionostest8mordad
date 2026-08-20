@@ -91,7 +91,7 @@ export const LandingPage: React.FC = () => {
 
             <div className="flex flex-wrap gap-2 pt-1">
               <Link to={ROUTES.register}>
-                <Button size="lg">ثبت درخواست</Button>
+                <Button size="lg">ثبت‌نام رایگان</Button>
               </Link>
               <Link to={ROUTES.login}>
                 <Button size="lg" variant="outline" className="!border-slate-500 !text-white hover:!bg-white/10">
