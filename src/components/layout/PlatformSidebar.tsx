@@ -24,11 +24,14 @@ import {
   Building2,
   CalendarDays,
   BellRing,
-  ListOrdered,
   Activity,
   Plug,
   Database,
   BookOpen,
+  Video,
+  Wallet,
+  Star,
+  Inbox,
 } from 'lucide-react';
 import { ROUTES } from '../../routes';
 import { useAuth } from '../../context/AuthContext';
@@ -36,6 +39,8 @@ import { canAccessRoute, RouteKey } from '../../lib/permissions';
 import { featureBadge } from '../../config/features';
 import { ROLE_LABELS } from '../../lib/labels';
 import { Badge } from '../ui';
+import { UserRole } from '../../types';
+import { getMockRequests } from '../../lib/mock';
 
 interface PlatformSidebarProps {
   mobileOpen: boolean;
@@ -50,67 +55,133 @@ type MenuItem = {
   icon: React.ElementType;
   routeKey: RouteKey;
   featureKey?: string;
-  badgeKey?: 'cases' | 'notif';
+  badgeKey?: 'cases' | 'notif' | 'requests';
   showComingSoon?: boolean;
 };
 
-const menuGroups: { title: string; items: MenuItem[] }[] = [
+type MenuGroup = { title: string; items: MenuItem[] };
+
+const customerMenu: MenuGroup[] = [
   {
     title: 'اصلی',
     items: [
-      { to: ROUTES.dashboard, label: 'داشبورد', icon: LayoutDashboard, routeKey: 'dashboard' },
-      { to: ROUTES.appServices, label: 'خدمات', icon: Briefcase, routeKey: 'services' },
-      { to: ROUTES.workspace, label: 'Workspace', icon: FolderKanban, routeKey: 'workspace' },
-      { to: ROUTES.requestNew, label: 'ثبت درخواست', icon: ClipboardList, routeKey: 'requests' },
-      { to: ROUTES.requestsList, label: 'لیست درخواست‌ها', icon: ListOrdered, routeKey: 'requestsList' },
+      { to: ROUTES.dashboard, label: 'خانه', icon: LayoutDashboard, routeKey: 'dashboard' },
+      { to: ROUTES.cases, label: 'پروژه‌های من', icon: Gavel, routeKey: 'cases', badgeKey: 'cases' },
+      { to: ROUTES.documents, label: 'اسناد من', icon: FileText, routeKey: 'documents' },
+      { to: ROUTES.experts, label: 'متخصصان', icon: UserCheck, routeKey: 'experts' },
+      { to: ROUTES.requestNew, label: 'درخواست مشاوره', icon: ClipboardList, routeKey: 'requests' },
+      { to: ROUTES.sessions, label: 'جلسات من', icon: Video, routeKey: 'sessions' },
+      { to: ROUTES.workspace, label: 'تسک‌ها', icon: FolderKanban, routeKey: 'workspace' },
       { to: ROUTES.calendar, label: 'تقویم', icon: CalendarDays, routeKey: 'calendar' },
       { to: ROUTES.reminders, label: 'یادآورها', icon: BellRing, routeKey: 'reminders' },
     ],
   },
   {
-    title: 'عملیات',
+    title: 'بیشتر',
     items: [
-      { to: ROUTES.cases, label: 'پرونده‌ها', icon: Gavel, routeKey: 'cases', badgeKey: 'cases' },
-      { to: ROUTES.documents, label: 'اسناد', icon: FileText, routeKey: 'documents' },
-      { to: ROUTES.contracts, label: 'قراردادها', icon: FileSignature, routeKey: 'contracts', featureKey: 'contracts' },
-      { to: ROUTES.chat, label: 'چت AI', icon: Bot, routeKey: 'chat', featureKey: 'chat' },
-      { to: ROUTES.reports, label: 'گزارش‌ها', icon: BarChart3, routeKey: 'reports', featureKey: 'bi' },
-      { to: ROUTES.automation, label: 'اتوماسیون', icon: Zap, routeKey: 'automation', featureKey: 'aiAnalysis' },
-      { to: ROUTES.workflows, label: 'Workflowها', icon: GitBranch, routeKey: 'workflows' },
-    ],
-  },
-  {
-    title: 'متخصصین',
-    items: [{ to: ROUTES.experts, label: 'بازار متخصصین', icon: UserCheck, routeKey: 'experts' }],
-  },
-  {
-    title: 'مدیریت',
-    items: [
-      { to: ROUTES.adminServices, label: 'مدیریت خدمات', icon: Briefcase, routeKey: 'adminServices' },
-      { to: ROUTES.organizations, label: 'سازمان‌ها', icon: Building2, routeKey: 'organizations' },
-      { to: ROUTES.adminMonitoring, label: 'Monitoring', icon: Activity, routeKey: 'adminMonitoring' },
-      { to: ROUTES.adminIntegrations, label: 'یکپارچه‌سازی', icon: Plug, routeKey: 'adminIntegrations' },
-      { to: ROUTES.adminAiPrep, label: 'آماده‌سازی AI', icon: Database, routeKey: 'adminAiPrep' },
-      { to: ROUTES.adminKnowledge, label: 'پایگاه دانش', icon: BookOpen, routeKey: 'adminKnowledge' },
-    ],
-  },
-  {
-    title: 'AI Agent',
-    items: [{ to: ROUTES.aiQueue, label: 'صف تحلیل', icon: Bot, routeKey: 'aiQueue' }],
-  },
-  {
-    title: 'حساب',
-    items: [
-      { to: ROUTES.subscription, label: 'اشتراک', icon: CreditCard, routeKey: 'subscription', featureKey: 'subscription' },
-      { to: ROUTES.billing, label: 'صورتحساب', icon: Receipt, routeKey: 'billing', featureKey: 'billing' },
       { to: ROUTES.notifications, label: 'اعلان‌ها', icon: Bell, routeKey: 'notifications', badgeKey: 'notif' },
-      { to: ROUTES.support, label: 'پشتیبانی', icon: LifeBuoy, routeKey: 'support', featureKey: 'support' },
+      { to: ROUTES.reports, label: 'گزارش‌ها', icon: BarChart3, routeKey: 'reports', featureKey: 'bi' },
+      { to: ROUTES.chat, label: 'چت AI', icon: Bot, routeKey: 'chat', featureKey: 'chat' },
       { to: ROUTES.settings, label: 'تنظیمات', icon: Settings, routeKey: 'settings' },
-      { to: ROUTES.audit, label: 'لاگ امنیتی', icon: ShieldCheck, routeKey: 'audit' },
-      { to: ROUTES.cms, label: 'CMS', icon: FilePenLine, routeKey: 'cms', featureKey: 'cms' },
+      { to: ROUTES.support, label: 'پشتیبانی', icon: LifeBuoy, routeKey: 'support', featureKey: 'support' },
     ],
   },
 ];
+
+const expertMenu: MenuGroup[] = [
+  {
+    title: 'اصلی',
+    items: [
+      { to: ROUTES.dashboard, label: 'خانه', icon: LayoutDashboard, routeKey: 'dashboard' },
+      { to: ROUTES.requestsList, label: 'درخواست‌های جدید', icon: Inbox, routeKey: 'requestsList', badgeKey: 'requests' },
+      { to: ROUTES.cases, label: 'پروژه‌های ارجاع‌شده', icon: Gavel, routeKey: 'cases', badgeKey: 'cases' },
+      { to: ROUTES.sessions, label: 'جلسات', icon: Video, routeKey: 'sessions' },
+      { to: ROUTES.calendar, label: 'تقویم', icon: CalendarDays, routeKey: 'calendar' },
+      { to: ROUTES.workspace, label: 'تسک‌ها', icon: FolderKanban, routeKey: 'workspace' },
+      { to: ROUTES.documents, label: 'اسناد', icon: FileText, routeKey: 'documents' },
+    ],
+  },
+  {
+    title: 'حرفه‌ای',
+    items: [
+      { to: ROUTES.profile, label: 'پروفایل تخصصی', icon: UserCheck, routeKey: 'settings' },
+      { to: ROUTES.billing, label: 'درآمد', icon: Wallet, routeKey: 'billing', featureKey: 'billing' },
+      { to: ROUTES.experts, label: 'نظرات و امتیاز', icon: Star, routeKey: 'experts' },
+      { to: ROUTES.notifications, label: 'اعلان‌ها', icon: Bell, routeKey: 'notifications', badgeKey: 'notif' },
+      { to: ROUTES.settings, label: 'تنظیمات', icon: Settings, routeKey: 'settings' },
+    ],
+  },
+];
+
+const adminMenu: MenuGroup[] = [
+  {
+    title: 'Control Center',
+    items: [
+      { to: ROUTES.dashboard, label: 'خانه', icon: LayoutDashboard, routeKey: 'dashboard' },
+      { to: ROUTES.adminMonitoring, label: 'Monitoring', icon: Activity, routeKey: 'adminMonitoring' },
+      { to: ROUTES.organizations, label: 'سازمان‌ها / Tenants', icon: Building2, routeKey: 'organizations' },
+      { to: ROUTES.workspace, label: 'Workspaces', icon: FolderKanban, routeKey: 'workspace' },
+      { to: ROUTES.cases, label: 'پروژه‌ها', icon: Gavel, routeKey: 'cases', badgeKey: 'cases' },
+      { to: ROUTES.documents, label: 'اسناد', icon: FileText, routeKey: 'documents' },
+      { to: ROUTES.experts, label: 'متخصصان', icon: UserCheck, routeKey: 'experts' },
+      { to: ROUTES.adminServices, label: 'مدیریت خدمات', icon: Briefcase, routeKey: 'adminServices' },
+    ],
+  },
+  {
+    title: 'سیستم',
+    items: [
+      { to: ROUTES.audit, label: 'Audit Log', icon: ShieldCheck, routeKey: 'audit' },
+      { to: ROUTES.reports, label: 'Reports', icon: BarChart3, routeKey: 'reports', featureKey: 'bi' },
+      { to: ROUTES.adminIntegrations, label: 'یکپارچه‌سازی', icon: Plug, routeKey: 'adminIntegrations' },
+      { to: ROUTES.automation, label: 'اتوماسیون', icon: Zap, routeKey: 'automation' },
+      { to: ROUTES.workflows, label: 'Workflowها', icon: GitBranch, routeKey: 'workflows' },
+      { to: ROUTES.adminAiPrep, label: 'آماده‌سازی AI', icon: Database, routeKey: 'adminAiPrep' },
+      { to: ROUTES.adminKnowledge, label: 'پایگاه دانش', icon: BookOpen, routeKey: 'adminKnowledge' },
+      { to: ROUTES.cms, label: 'CMS', icon: FilePenLine, routeKey: 'cms', featureKey: 'cms' },
+      { to: ROUTES.settings, label: 'تنظیمات', icon: Settings, routeKey: 'settings' },
+    ],
+  },
+];
+
+const partnerMenu: MenuGroup[] = [
+  {
+    title: 'اصلی',
+    items: [
+      { to: ROUTES.dashboard, label: 'خانه', icon: LayoutDashboard, routeKey: 'dashboard' },
+      { to: ROUTES.workspace, label: 'Workspace', icon: FolderKanban, routeKey: 'workspace' },
+      { to: ROUTES.cases, label: 'پروژه‌ها', icon: Gavel, routeKey: 'cases', badgeKey: 'cases' },
+      { to: ROUTES.documents, label: 'اسناد', icon: FileText, routeKey: 'documents' },
+      { to: ROUTES.notifications, label: 'اعلان‌ها', icon: Bell, routeKey: 'notifications', badgeKey: 'notif' },
+    ],
+  },
+];
+
+const aiAgentMenu: MenuGroup[] = [
+  {
+    title: 'AI Agent',
+    items: [
+      { to: ROUTES.aiQueue, label: 'صف تحلیل', icon: Bot, routeKey: 'aiQueue' },
+      { to: ROUTES.cases, label: 'پرونده‌ها', icon: Gavel, routeKey: 'cases' },
+      { to: ROUTES.documents, label: 'اسناد', icon: FileText, routeKey: 'documents' },
+    ],
+  },
+];
+
+function menusForRole(role?: UserRole | null): MenuGroup[] {
+  switch (role) {
+    case 'expert':
+      return expertMenu;
+    case 'admin':
+    case 'manager':
+      return adminMenu;
+    case 'partner':
+      return partnerMenu;
+    case 'ai_agent':
+      return aiAgentMenu;
+    default:
+      return customerMenu;
+  }
+}
 
 export const PlatformSidebar: React.FC<PlatformSidebarProps> = ({
   mobileOpen,
@@ -119,10 +190,13 @@ export const PlatformSidebar: React.FC<PlatformSidebarProps> = ({
   unreadNotifications,
 }) => {
   const { user, isDemoMode } = useAuth();
+  const menuGroups = menusForRole(user?.role);
+  const requestBadge = getMockRequests().filter((r) => r.status === 'submitted').length;
 
-  const getBadge = (key?: 'cases' | 'notif') => {
+  const getBadge = (key?: 'cases' | 'notif' | 'requests') => {
     if (key === 'cases' && caseCount > 0) return String(caseCount);
     if (key === 'notif' && unreadNotifications > 0) return String(unreadNotifications);
+    if (key === 'requests' && requestBadge > 0) return String(requestBadge);
     return null;
   };
 
@@ -134,24 +208,22 @@ export const PlatformSidebar: React.FC<PlatformSidebarProps> = ({
 
     return (
       <NavLink
-        key={item.to}
+        key={item.to + item.label}
         to={item.to}
         onClick={onCloseMobile}
         className={({ isActive }) =>
           `flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors text-xs font-medium ${
             isActive
               ? 'bg-blue-600 text-white'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              : 'text-slate-300 hover:bg-slate-800 hover:text-white'
           }`
         }
       >
         <item.icon className="w-4 h-4 shrink-0" />
         <span className="flex-1">{item.label}</span>
-        {comingSoon && (
-          <Badge tone="amber" className="!text-[9px] !px-1">{comingSoon}</Badge>
-        )}
+        {comingSoon && <Badge tone="amber" className="!text-[9px] !px-1">{comingSoon}</Badge>}
         {badge && (
-          <span className="bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+          <span className="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
             {badge}
           </span>
         )}
@@ -166,11 +238,11 @@ export const PlatformSidebar: React.FC<PlatformSidebarProps> = ({
       )}
 
       <aside
-        className={`fixed lg:static inset-y-0 right-0 z-50 w-64 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 flex flex-col transform transition-transform lg:transform-none ${
+        className={`fixed lg:static inset-y-0 right-0 z-50 w-64 bg-slate-900 text-slate-100 border-l border-slate-800 flex flex-col transform transition-transform lg:transform-none ${
           mobileOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 lg:hidden">
+        <div className="flex items-center justify-between p-4 border-b border-slate-800 lg:hidden">
           <span className="text-xs font-bold">منو</span>
           <button onClick={onCloseMobile} className="p-1" aria-label="بستن منو">
             <X className="w-5 h-5" />
@@ -178,44 +250,50 @@ export const PlatformSidebar: React.FC<PlatformSidebarProps> = ({
         </div>
 
         {user && (
-          <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="px-4 py-3 border-b border-slate-800">
             <p className="text-[10px] text-slate-500">نقش فعال</p>
-            <p className="text-xs font-bold">{ROLE_LABELS[user.role]}</p>
-            {isDemoMode && (
-              <Badge tone="amber" className="mt-1">حالت نمایشی</Badge>
-            )}
+            <p className="text-xs font-bold text-white">{ROLE_LABELS[user.role]}</p>
+            {isDemoMode && <Badge tone="amber" className="mt-1">حالت نمایشی</Badge>}
           </div>
         )}
 
         <nav className="flex-1 overflow-y-auto p-3 space-y-4">
-          {menuGroups
-            .filter((group) => {
-              if (group.title === 'AI Agent') {
-                return user?.role === 'ai_agent' || user?.role === 'admin';
-              }
-              if (user?.role === 'ai_agent') {
-                return group.title === 'AI Agent' || group.title === 'عملیات';
-              }
-              return true;
-            })
-            .map((group) => {
-            const items =
-              user?.role === 'ai_agent' && group.title === 'عملیات'
-                ? group.items.filter((item) => item.routeKey === 'cases')
-                : group.items;
-            const visibleItems = items.filter((item) => canAccessRoute(user?.role, item.routeKey));
+          {menuGroups.map((group) => {
+            const visibleItems = group.items.filter((item) => canAccessRoute(user?.role, item.routeKey));
             if (visibleItems.length === 0) return null;
-
             return (
               <div key={group.title}>
-                <p className="text-[10px] font-bold text-slate-400 px-3 mb-1.5 uppercase tracking-wide">
+                <p className="text-[10px] font-bold text-slate-500 px-3 mb-1.5 uppercase tracking-wide">
                   {group.title}
                 </p>
-                <div className="space-y-0.5">{items.map(renderItem)}</div>
+                <div className="space-y-0.5">{group.items.map(renderItem)}</div>
               </div>
             );
           })}
         </nav>
+
+        {/* Keep secondary links for subscription etc. only for non-ai */}
+        {user?.role !== 'ai_agent' && user?.role !== 'customer' && user?.role !== 'expert' && (
+          <div className="p-3 border-t border-slate-800 space-y-0.5">
+            {[
+              { to: ROUTES.subscription, label: 'اشتراک', icon: CreditCard, routeKey: 'subscription' as RouteKey },
+              { to: ROUTES.billing, label: 'صورتحساب', icon: Receipt, routeKey: 'billing' as RouteKey },
+              { to: ROUTES.contracts, label: 'قراردادها', icon: FileSignature, routeKey: 'contracts' as RouteKey },
+            ].map((item) =>
+              canAccessRoute(user?.role, item.routeKey) ? (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  onClick={onCloseMobile}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-400 hover:bg-slate-800 hover:text-white"
+                >
+                  <item.icon className="w-4 h-4" />
+                  {item.label}
+                </NavLink>
+              ) : null
+            )}
+          </div>
+        )}
       </aside>
     </>
   );

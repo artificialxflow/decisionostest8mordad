@@ -14,6 +14,7 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { RequestsListPage } from './pages/RequestsListPage';
 import { CalendarPage, RemindersPage } from './pages/CalendarPage';
+import { SessionsPage } from './pages/SessionsPage';
 import { DraftReviewPage } from './pages/DraftReviewPage';
 import {
   MonitoringDashboardPage,
@@ -127,6 +128,7 @@ export default function App() {
                 <Route path="requests" element={<RequestsListPage />} />
                 <Route path="calendar" element={<CalendarPage />} />
                 <Route path="reminders" element={<RemindersPage />} />
+                <Route path="sessions" element={<SessionsPage />} />
                 <Route path="cases/:caseId/draft-review" element={<DraftReviewRoute />} />
                 <Route path="ai-queue" element={<AiQueuePage />} />
                 <Route path="admin/monitoring" element={<MonitoringDashboardPage />} />

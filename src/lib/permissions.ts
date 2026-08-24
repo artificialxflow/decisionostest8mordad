@@ -50,6 +50,7 @@ export type RouteKey =
   | 'organizations'
   | 'calendar'
   | 'reminders'
+  | 'sessions'
   | 'adminMonitoring'
   | 'adminIntegrations'
   | 'adminAiPrep'
@@ -116,6 +117,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'manage_tasks',
     'view_notifications',
     'view_experts',
+    'view_requests',
   ],
   customer: [
     'view_dashboard',
@@ -128,6 +130,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'view_requests',
     'view_notifications',
     'view_experts',
+    'view_tasks',
   ],
   partner: [
     'view_dashboard',
@@ -172,8 +175,9 @@ const ROUTE_PERMISSIONS: Record<RouteKey, Permission> = {
   workflows: 'view_admin',
   automation: 'view_dashboard',
   organizations: 'view_admin',
-  calendar: 'view_tasks',
-  reminders: 'view_tasks',
+  calendar: 'view_dashboard',
+  reminders: 'view_dashboard',
+  sessions: 'view_dashboard',
   adminMonitoring: 'view_admin',
   adminIntegrations: 'view_admin',
   adminAiPrep: 'view_admin',

@@ -143,13 +143,13 @@ function delay(ms: number) {
 export function getPostLoginRoute(role: UserRole): string {
   switch (role) {
     case 'customer':
-      return '/app/services';
+      return '/app/dashboard';
     case 'expert':
-      return '/app/cases';
+      return '/app/dashboard';
     case 'partner':
-      return '/app/workspace';
+      return '/app/dashboard';
     case 'admin':
-      return '/app/admin/services';
+      return '/app/dashboard';
     case 'manager':
       return '/app/dashboard';
     case 'ai_agent':

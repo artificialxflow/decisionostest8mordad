@@ -105,10 +105,10 @@ export const CaseListView: React.FC<CaseListViewProps> = ({
         <div>
           <h1 className="text-lg font-bold text-slate-800 flex items-center gap-2">
             <Gavel className="w-5 h-5 text-blue-600" />
-            <span>مدیریت پرونده‌های حقوقی و ملکی</span>
+            <span>پروژه‌ها و پرونده‌ها</span>
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            مشاهده، فیلتر و ارزیابی هوشمند تمامی پرونده‌ها همراه با شاخص‌های ریسک ثبتی
+            مشاهده، فیلتر و پیگیری پروژه‌ها همراه با وضعیت و پیشرفت
           </p>
         </div>
 
@@ -246,9 +246,9 @@ export const CaseListView: React.FC<CaseListViewProps> = ({
       {/* Cases Output */}
       {isEmptySystem ? (
         <EmptyState
-          title="هنوز پرونده‌ای ایجاد نکرده‌اید"
-          description="اولین پرونده خود را ثبت کنید یا از طریق ثبت درخواست شروع کنید."
-          actionLabel={can('create_case') ? 'ایجاد پرونده' : undefined}
+          title="هنوز پروژه‌ای ایجاد نکرده‌اید"
+          description="اولین پروژه خود را ثبت کنید یا از طریق ثبت درخواست شروع کنید."
+          actionLabel={can('create_case') ? 'ایجاد پروژه' : undefined}
           onAction={can('create_case') ? onOpenNewCaseModal : undefined}
           icon={<Gavel className="w-5 h-5" />}
         />

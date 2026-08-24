@@ -45,6 +45,7 @@ export const ROUTES = {
   requestsList: '/app/requests',
   calendar: '/app/calendar',
   reminders: '/app/reminders',
+  sessions: '/app/sessions',
   draftReview: '/app/cases/:caseId/draft-review',
   adminMonitoring: '/app/admin/monitoring',
   adminIntegrations: '/app/admin/integrations',

@@ -121,6 +121,9 @@ export * from './drafts';
 export * from './knowledge';
 export * from './semanticSearch';
 export * from './aiAgentQueue';
+export * from './sessions';
+export * from './expertStats';
+export * from './adminSystem';
 
 export {
   getMockTasks,

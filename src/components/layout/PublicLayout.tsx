@@ -7,12 +7,11 @@ import { Footer } from './Footer';
 import { Button } from '../ui';
 
 const navLinks = [
-  { to: ROUTES.home, label: 'خانه' },
+  { to: ROUTES.home, label: 'معرفی' },
   { to: ROUTES.services, label: 'خدمات' },
-  { to: ROUTES.pricing, label: 'تعرفه' },
   { to: ROUTES.about, label: 'درباره ما' },
-  { to: ROUTES.faq, label: 'سوالات متداول' },
-  { to: ROUTES.blog, label: 'بلاگ' },
+  { to: '/app/experts', label: 'متخصصان' },
+  { to: ROUTES.pricing, label: 'تعرفه' },
   { to: ROUTES.contact, label: 'تماس' },
 ];
 
@@ -65,8 +64,8 @@ export const PublicLayout: React.FC = () => {
                 ورود
               </Button>
             </Link>
-            <Link to={ROUTES.dashboard} className="hidden sm:block">
-              <Button size="sm">ورود به Workspace</Button>
+            <Link to={ROUTES.register} className="hidden sm:block">
+              <Button size="sm">ثبت‌نام</Button>
             </Link>
             <button
               className="lg:hidden p-2 text-slate-600 dark:text-slate-300"
@@ -90,9 +89,14 @@ export const PublicLayout: React.FC = () => {
                 {l.label}
               </NavLink>
             ))}
-            <Link to={ROUTES.dashboard} onClick={() => setOpen(false)} className="block pt-2">
+            <Link to={ROUTES.register} onClick={() => setOpen(false)} className="block pt-2">
               <Button fullWidth size="sm">
-                ورود به Workspace
+                ثبت‌نام رایگان
+              </Button>
+            </Link>
+            <Link to={ROUTES.login} onClick={() => setOpen(false)} className="block">
+              <Button fullWidth size="sm" variant="outline">
+                ورود
               </Button>
             </Link>
           </div>

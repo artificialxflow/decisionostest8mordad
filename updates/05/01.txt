@@ -1,0 +1,137 @@
+سخت افزار آینده نیز در نظر گرفته شده است 
+
+خلاصه وضعیت
+برای DecisionOS بهتر است سخت‌افزار را بر اساس مرحله توسعه انتخاب کنیم، نه از ابتدا یک سرور بسیار گران بخریم. چون در Sprint 2 هنوز AI/RAG سنگین و Local AI اجرا نمی‌شود؛ اما معماری باید برای آن آماده باشد.
+1. سیستم توسعه‌دهنده — Sprint 2
+برای شروع کدنویسی:
+
+برای توسعه Docker، PostgreSQL، Backend، Frontend و تست همزمان، 64GB RAM انتخاب مناسب‌تری است.
+
+2. سرور اولیه Production
+برای نسخه‌ای که مشتری واقعی دارد ولی هنوز Local AI سنگین روی سرور اجرا نمی‌شود:
+CPU       : 16–24 Core
+RAM       : 64–128 GB ECC
+Storage   : 2 × 1.92TB NVMe Enterprise
+RAID      : RAID 1
+Network   : 1–10 GbE
+PSU       : Redundant
+مثلاً CPUهای کلاس:
+AMD EPYC
+Intel Xeon
+مناسب‌تر از CPUهای Desktop هستند، چون ECC، پایداری و قابلیت کار مداوم اهمیت بیشتری پیدا می‌کند.
+
+3. سرور AI / Local AI
+اینجا GPU مهم می‌شود.
+برای Sprint 7 که Local AI + Offline وارد پروژه می‌شود، سخت‌افزار باید جداگانه طراحی شود.
+حداقل مناسب برای شروع:
+CPU       : 16–32 Core
+RAM       : 128GB ECC
+GPU       : NVIDIA RTX 4090 24GB
+Storage   : 2–4TB NVMe
+Network   : 10GbE
+اما اگر هدف اجرای مدل‌های بزرگ‌تر و تعداد کاربر همزمان بیشتر باشد:
+GPU
+↓
+RTX 6000 Ada 48GB
+یا
+نسل‌های جدید NVIDIA با VRAM بالا
+بهتر است.
+VRAM در Local LLM بسیار مهم‌تر از صرفاً قدرت خام GPU است.
+
+4. چرا 24GB یا 48GB VRAM مهم است؟
+مدل AI باید در حافظه GPU یا ترکیبی از GPU و RAM قرار بگیرد.
+تقریباً:
+مدل کوچک
+↓
+8–12GB VRAM
+
+مدل متوسط
+↓
+16–24GB VRAM
+
+مدل بزرگ‌تر
+↓
+48GB+
+
+مدل‌های بسیار بزرگ
+↓
+چند GPU
+البته مقدار واقعی به تعداد پارامترها، Quantization، Context Length، Batch Size و معماری مدل وابسته است.
+
+5. Storage
+برای DecisionOS هارد معمولی را نباید Storage اصلی قرار دهیم.
+ساختار بهتر:
+NVMe
+│
+├── OS
+├── Database
+├── Application
+└── Cache
+
+Object Storage
+│
+├── PDF
+├── Word
+├── Excel
+├── Image
+├── Audio
+└── Video
+
+Backup
+└── جدا از Production
+برای اسناد حجیم، Object Storage از اینکه همه چیز مستقیماً روی Database ذخیره شود مناسب‌تر است.
+
+6. Database Server
+PostgreSQL بهتر است روی Storage سریع و پایدار قرار گیرد:
+CPU      : 8–16 Core
+RAM      : 64–128GB ECC
+Storage  : NVMe Enterprise
+Backup   : جداگانه
+و Database نباید بدون Backup و Replication روی یک دیسک قرار گیرد.
+
+7. معماری سخت‌افزاری پیشنهادی DecisionOS
+INTERNET
+                            │
+                       Load Balancer
+                            │
+                 ┌──────────┴──────────┐
+                 │                     │
+             APP SERVER             API SERVER
+                 │                     │
+                 └──────────┬──────────┘
+                            │
+                 ┌──────────┼──────────┐
+                 ↓          ↓          ↓
+             PostgreSQL   Redis     Queue/Worker
+                 │                     │
+                 ↓                     ↓
+            Object Storage        AI Services
+                                       │
+                             ┌─────────┼─────────┐
+                             ↓         ↓         ↓
+                           Cloud AI  Local AI   OCR/STT
+این معماری با تصمیمی که برای Sprint 2 گرفته‌ایم سازگار است: Core از Providerهای AI مستقل می‌ماند.
+
+8. پیشنهاد مرحله‌ای برای سرمایه‌گذاری
+مرحله فعلی — توسعه Sprint 2
+64GB RAM + 1TB/2TB NVMe + CPU قوی
+GPU حرفه‌ای فعلاً ضروری نیست.
+مرحله Production اولیه
+128GB ECC + EPYC/Xeon + NVMe Enterprise + Backup + Redundant PSU
+مرحله Local AI
+اضافه‌شدن:
+GPU با حداقل 24GB VRAM
+و در صورت رشد واقعی کاربران:
+48GB VRAM یا Multi-GPU
+
+نتیجه
+برای DecisionOS نباید امروز یک سرور AI بسیار گران خریداری شود.
+انتخاب منطقی:
+Sprint 2 → CPU/RAM/Storage قوی و پایدار
+
+Production → سرور Enterprise با ECC و NVMe
+
+Sprint 6 → زیرساخت RAG و پردازش اسناد
+
+Sprint 7 → GPU قدرتمند و Local AI/Offline
+مهم‌تر از مدل دقیق CPU یا GPU، این است که معماری نرم‌افزار از ابتدا Cloud/Local AI Agnostic باشد تا با افزایش کاربران بتوانیم GPU و سرورهای جدید را بدون بازنویسی Core به سیستم اضافه کنیم.
