@@ -254,7 +254,7 @@ export const CaseListView: React.FC<CaseListViewProps> = ({
         />
       ) : isEmptyFiltered ? (
         <EmptyState
-          title="پرونده‌ای مطابق جستجو یافت نشد"
+          title="پروژه‌ای مطابق جستجو یافت نشد"
           description="فیلتر یا عبارت جستجو را تغییر دهید."
           actionLabel="پاک کردن فیلتر"
           onAction={clearFilters}

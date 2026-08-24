@@ -1,16 +1,24 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bell, Mail, MessageSquare, Smartphone } from 'lucide-react';
 import { PageHeader, Badge, Button, EmptyState } from '../components/ui';
 import { usePlatformData } from '../components/layout/PlatformLayout';
 import { apiUrl } from '../lib/api';
 import { featureBadge } from '../config/features';
+import { ROUTES } from '../routes';
 
 export const NotificationsPage: React.FC = () => {
   const { notifications, refresh } = usePlatformData();
+  const navigate = useNavigate();
 
   const markRead = async (id: string) => {
     await fetch(apiUrl(`/notifications/${id}/read`), { method: 'POST' });
     await refresh();
+  };
+
+  const openNotif = async (id: string, link?: string) => {
+    await markRead(id);
+    if (link) navigate(link);
   };
 
   return (
@@ -40,22 +48,43 @@ export const NotificationsPage: React.FC = () => {
 
       <div className="bg-white dark:bg-slate-900 border rounded-lg divide-y">
         {notifications.length === 0 ? (
-          <EmptyState title="اعلانی وجود ندارد" description="اعلان‌های سیستم اینجا نمایش داده می‌شوند." icon={<Bell className="w-5 h-5" />} />
+          <EmptyState
+            title="اعلانی وجود ندارد"
+            description="وقتی متخصص پاسخ دهد، مدرک لازم باشد یا جلسه‌ای نزدیک شود، اینجا می‌بینید."
+            actionLabel="رفتن به داشبورد"
+            onAction={() => navigate(ROUTES.dashboard)}
+            icon={<Bell className="w-5 h-5" />}
+          />
         ) : (
           notifications.map((n) => (
-            <div key={n.id} className="flex items-start justify-between gap-3 p-4">
+            <button
+              key={n.id}
+              type="button"
+              onClick={() => openNotif(n.id, n.link)}
+              className="w-full flex items-start justify-between gap-3 p-4 text-right hover:bg-slate-50 dark:hover:bg-slate-800/50 focus-visible:ring-2 focus-visible:ring-blue-500 outline-none"
+            >
               <div>
                 <div className={`text-xs ${n.read ? 'text-slate-500' : 'font-bold'}`}>{n.title}</div>
                 <p className="text-[11px] text-slate-500 mt-1">{n.body}</p>
-                <div className="flex gap-2 mt-2">
+                <div className="flex gap-2 mt-2 items-center">
                   <Badge tone={n.channel === 'in_app' ? 'blue' : 'amber'}>{n.channel}</Badge>
                   <span className="text-[10px] text-slate-400">{n.createdAt}</span>
+                  {n.link && <span className="text-[10px] text-blue-600 font-bold">مشاهده ←</span>}
                 </div>
               </div>
               {!n.read && (
-                <Button size="sm" variant="ghost" onClick={() => markRead(n.id)}>خواندم</Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    markRead(n.id);
+                  }}
+                >
+                  خواندم
+                </Button>
               )}
-            </div>
+            </button>
           ))
         )}
       </div>

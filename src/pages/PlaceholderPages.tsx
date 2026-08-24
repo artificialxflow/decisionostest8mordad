@@ -9,6 +9,7 @@ import { getAverageRating } from '../lib/mock/satisfaction';
 import { AutomationRulesList } from '../components/AutomationRulesList';
 import { AutomationRuleBuilder } from '../components/AutomationRuleBuilder';
 import { HoldingDashboard } from '../components/HoldingDashboard';
+import { isFeatureEnabledForUi, setFeatureOverride } from '../lib/featureOverrides';
 
 interface FeaturePageProps {
   title: string;
@@ -299,9 +300,11 @@ export const SupportPage = () => {
           {submitted && <p className="text-xs text-emerald-600">تیکت ثبت شد — پاسخ در ۲۴ ساعت (mock)</p>}
         </form>
         <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-5 space-y-2">
-          <h3 className="text-sm font-bold">سؤالات متداول</h3>
+          <h3 className="text-sm font-bold">سؤالات متداول و Demo</h3>
           <p className="text-xs text-slate-600 dark:text-slate-400">برای سؤالات عمومی به FAQ مراجعه کنید.</p>
           <Link to={ROUTES.faq} className="text-xs text-blue-600 font-bold inline-block">رفتن به FAQ →</Link>
+          <p className="text-xs text-slate-600 dark:text-slate-400 pt-2">مسیر نمایش کارفرما: فایل <code className="text-[10px]">docs/demo-script-v6.md</code></p>
+          <Link to={ROUTES.settings} className="text-xs text-blue-600 font-bold inline-block">تنظیمات و Feature flags →</Link>
         </div>
       </div>
     </FeaturePage>
@@ -332,7 +335,18 @@ export const AutomationPage = () => {
   );
 };
 
-export const SettingsPage = () => (
+export const SettingsPage = () => {
+  const [chatOn, setChatOn] = useState(() => isFeatureEnabledForUi('chat', true));
+  const [aiOn, setAiOn] = useState(() => isFeatureEnabledForUi('aiAnalysis', true));
+  const [, bump] = useState(0);
+
+  const toggle = (key: string, value: boolean, setter: (v: boolean) => void) => {
+    setter(value);
+    setFeatureOverride(key, value);
+    bump((x) => x + 1);
+  };
+
+  return (
   <div className="space-y-5">
     <PageHeader title="تنظیمات" description="تم، زبان، سازمان و ترجیحات Workspace" />
     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-5 space-y-3 text-xs">
@@ -341,11 +355,36 @@ export const SettingsPage = () => (
       <Link to={ROUTES.profile} className="text-blue-600 font-bold inline-block">رفتن به پروفایل</Link>
       <Link to={ROUTES.organizations} className="text-blue-600 font-bold block mt-2">مدیریت سازمان‌ها / هلدینگ →</Link>
     </div>
+
+    <div className="bg-white dark:bg-slate-900 border rounded-lg p-5 space-y-3 text-xs">
+      <h3 className="font-bold text-sm">Feature flags (نمایشی)</h3>
+      <p className="text-slate-500">خاموش/روشن کردن آیتم‌های AI در منو — فقط Frontend، localStorage</p>
+      <label className="flex items-center justify-between gap-2 py-2 border-b">
+        <span>چت AI در Sidebar</span>
+        <input type="checkbox" checked={chatOn} onChange={(e) => toggle('chat', e.target.checked, setChatOn)} />
+      </label>
+      <label className="flex items-center justify-between gap-2 py-2">
+        <span>تحلیل AI / اتوماسیون در Sidebar</span>
+        <input type="checkbox" checked={aiOn} onChange={(e) => toggle('aiAnalysis', e.target.checked, setAiOn)} />
+      </label>
+    </div>
+
+    <div className="bg-white dark:bg-slate-900 border rounded-lg p-5 space-y-2 text-xs">
+      <h3 className="font-bold text-sm">راهنمای Demo</h3>
+      <p className="text-slate-500">مسیر نمایش به کارفرما برای نقش‌های مشتری، متخصص و مدیر.</p>
+      <a href="/docs/demo-script-v6.md" className="text-blue-600 font-bold" target="_blank" rel="noreferrer">
+        باز کردن Demo Script (در صورت سرو شدن docs)
+      </a>
+      <p className="text-[10px] text-slate-400">فایل: <code>docs/demo-script-v6.md</code> در ریشه پروژه</p>
+      <Link to={ROUTES.support} className="text-blue-600 font-bold block">پشتیبانی / راهنما →</Link>
+    </div>
+
     <div className="p-4 rounded-lg border border-dashed border-slate-300 text-[11px] text-slate-500">
-      <strong>تفاوت Landing و App:</strong> مشترک اپ را می‌گیرد؛ صفحات عمومی (About, Blog) برای SEO جداست.
+      <strong>واژگان:</strong> در UI مشتری «پروژه»؛ در جزئیات حقوقی می‌توان «پرونده» دید.
     </div>
   </div>
-);
+  );
+};
 
 export const VoicePlaceholderPage = () => (
   <FeaturePage title="Voice Assistant" description="دستیار صوتی" purpose="دستیار صوتی برای ثبت یادداشت و جستجو — Sprint 3" featureKey="voice" />

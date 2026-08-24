@@ -12,7 +12,7 @@ import {
   Bell,
   ChevronLeft,
 } from 'lucide-react';
-import { PageHeader, Badge, Button } from '../ui';
+import { PageHeader, Badge, Button, EmptyState } from '../ui';
 import { usePlatformData } from '../layout/PlatformLayout';
 import { ROUTES } from '../../routes';
 import { getMockTasks, getMockRequests, getUpcomingSessions } from '../../lib/mock';
@@ -26,7 +26,6 @@ export const CustomerDashboard: React.FC = () => {
   const tasks = getMockTasks().filter((t) => t.status !== 'done');
   const requests = getMockRequests();
   const sessions = getUpcomingSessions(4);
-  const unread = notifications.filter((n) => !n.read);
   const activeProjects = cases.filter((c) => !['completed', 'archived', 'cancelled'].includes(c.status));
 
   const kpis = [
@@ -50,26 +49,36 @@ export const CustomerDashboard: React.FC = () => {
         }
       />
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         {kpis.map((k) => (
           <button
             key={k.label}
             type="button"
             onClick={() => navigate(k.to)}
-            className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-right hover:border-blue-400 transition-colors"
+            className="dos-card p-4 rounded-[var(--dos-radius-lg)] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-right hover:border-blue-400 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 outline-none"
           >
-            <k.icon className="w-4 h-4 text-blue-600 mb-2" />
+            <k.icon className="w-4 h-4 text-[var(--dos-primary)] mb-2" />
             <div className="text-2xl font-black">{k.value}</div>
             <div className="text-[10px] text-slate-500">{k.label}</div>
           </button>
         ))}
       </div>
 
+      {activeProjects.length === 0 && (
+        <EmptyState
+          title="هنوز پروژه‌ای ندارید"
+          description="اولین پروژه را بسازید یا از ثبت درخواست شروع کنید."
+          actionLabel="ثبت اولین پروژه"
+          onAction={openNewCase}
+          icon={<Gavel className="w-5 h-5" />}
+        />
+      )}
+
       <div className="grid sm:grid-cols-3 gap-3">
         <button
           type="button"
           onClick={openNewCase}
-          className="p-5 rounded-xl border-2 border-dashed border-blue-300 bg-blue-50/50 dark:bg-blue-950/20 text-center hover:border-blue-500 transition-colors"
+          className="p-5 rounded-[var(--dos-radius-lg)] border-2 border-dashed border-blue-300 bg-blue-50/50 dark:bg-blue-950/20 text-center hover:border-blue-500 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 outline-none"
         >
           <Plus className="w-8 h-8 text-blue-600 mx-auto mb-2" />
           <p className="text-xs font-bold">ایجاد پروژه جدید</p>
@@ -100,17 +109,26 @@ export const CustomerDashboard: React.FC = () => {
               همه <ChevronLeft className="w-3 h-3" />
             </Link>
           </div>
-          {activeProjects.slice(0, 5).map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => navigate(`${ROUTES.cases}/${c.id}`)}
-              className="w-full flex justify-between items-center text-[11px] p-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-right"
-            >
-              <span className="font-semibold line-clamp-1">{c.title}</span>
-              <Badge tone="blue">{CASE_STATUS_LABELS[c.status]}</Badge>
-            </button>
-          ))}
+          {activeProjects.length === 0 ? (
+            <EmptyState
+              title="پروژه‌ای نیست"
+              description="با ایجاد پروژه یا ثبت درخواست شروع کنید."
+              actionLabel="پروژه جدید"
+              onAction={openNewCase}
+            />
+          ) : (
+            activeProjects.slice(0, 5).map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => navigate(`${ROUTES.cases}/${c.id}`)}
+                className="w-full flex justify-between items-center text-[11px] p-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-right focus-visible:ring-2 focus-visible:ring-blue-500 outline-none"
+              >
+                <span className="font-semibold line-clamp-1">{c.title}</span>
+                <Badge tone="blue">{CASE_STATUS_LABELS[c.status]}</Badge>
+              </button>
+            ))
+          )}
         </div>
 
         <div className="bg-white dark:bg-slate-900 rounded-xl border p-4 space-y-3">
@@ -120,23 +138,32 @@ export const CustomerDashboard: React.FC = () => {
               همه
             </Link>
           </div>
-          {sessions.map((s) => (
-            <div key={s.id} className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 text-[11px]">
-              {s.avatarUrl ? (
-                <img src={s.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-bold">
-                  {s.expertName.slice(0, 1)}
+          {sessions.length === 0 ? (
+            <EmptyState
+              title="جلسه‌ای نیست"
+              description="می‌توانید از تقویم یا درخواست مشاوره جلسه بگذارید."
+              actionLabel="درخواست مشاوره"
+              onAction={() => navigate(ROUTES.requestNew)}
+            />
+          ) : (
+            sessions.map((s) => (
+              <div key={s.id} className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 text-[11px]">
+                {s.avatarUrl ? (
+                  <img src={s.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-bold">
+                    {s.expertName.slice(0, 1)}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold truncate">{s.title}</p>
+                  <p className="text-slate-500">
+                    {s.date} · {s.time} · {s.expertName}
+                  </p>
                 </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <p className="font-bold truncate">{s.title}</p>
-                <p className="text-slate-500">
-                  {s.date} · {s.time} · {s.expertName}
-                </p>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 
@@ -146,13 +173,23 @@ export const CustomerDashboard: React.FC = () => {
             <Bell className="w-3.5 h-3.5" />
             اعلان‌های اخیر
           </h3>
-          {unread.length === 0 && notifications.length === 0 ? (
-            <p className="text-[11px] text-slate-500">اعلانی نیست</p>
+          {notifications.length === 0 ? (
+            <EmptyState
+              title="اعلانی نیست"
+              description="وقتی متخصص پاسخ دهد یا مدرک لازم باشد، اینجا می‌بینید."
+              actionLabel="رفتن به پروژه‌ها"
+              onAction={() => navigate(ROUTES.cases)}
+            />
           ) : (
             notifications.slice(0, 4).map((n) => (
-              <div key={n.id} className={`text-[11px] p-2 rounded ${n.read ? 'text-slate-500' : 'font-semibold bg-blue-50/50 dark:bg-blue-950/20'}`}>
+              <button
+                key={n.id}
+                type="button"
+                onClick={() => navigate(n.link || ROUTES.notifications)}
+                className={`w-full text-right text-[11px] p-2 rounded ${n.read ? 'text-slate-500' : 'font-semibold bg-blue-50/50 dark:bg-blue-950/20'} hover:bg-slate-50 dark:hover:bg-slate-800`}
+              >
                 {n.title}
-              </div>
+              </button>
             ))
           )}
           <Link to={ROUTES.notifications} className="text-[11px] text-blue-600 font-bold inline-block pt-1">

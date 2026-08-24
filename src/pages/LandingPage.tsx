@@ -25,7 +25,7 @@ const marketingStats = [
 ];
 
 const features = [
-  { icon: Briefcase, title: 'مدیریت پروژه یکپارچه', desc: 'پیگیری پرونده و Workspace در یک محیط' },
+  { icon: Briefcase, title: 'مدیریت پروژه یکپارچه', desc: 'پیگیری پروژه و Workspace در یک محیط' },
   { icon: Users, title: 'همکاری با متخصصان', desc: 'شبکه کارشناسان حقوقی، ملکی و مالی' },
   { icon: FileCheck, title: 'مدیریت هوشمند اسناد', desc: 'آپلود، نسخه، OCR و پیش‌نمایش' },
   { icon: Sparkles, title: 'تصمیم داده محور', desc: 'تحلیل و گزارش برای تصمیم بهتر' },
@@ -76,6 +76,12 @@ export const LandingPage: React.FC = () => {
                 </Button>
               </Link>
             </div>
+            <p className="text-[11px] text-slate-500 pt-2">
+              Demo سریع:{' '}
+              <Link to={ROUTES.login} className="text-blue-600 font-bold">
+                ورود به‌عنوان مشتری / متخصص / مدیر
+              </Link>
+            </p>
           </motion.div>
 
           {/* Mock dashboard preview — بدون داده واقعی */}

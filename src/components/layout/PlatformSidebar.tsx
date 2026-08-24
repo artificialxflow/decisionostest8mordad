@@ -36,11 +36,12 @@ import {
 import { ROUTES } from '../../routes';
 import { useAuth } from '../../context/AuthContext';
 import { canAccessRoute, RouteKey } from '../../lib/permissions';
-import { featureBadge } from '../../config/features';
+import { featureBadge, isFeatureActive } from '../../config/features';
 import { ROLE_LABELS } from '../../lib/labels';
 import { Badge } from '../ui';
 import { UserRole } from '../../types';
 import { getMockRequests } from '../../lib/mock';
+import { isFeatureEnabledForUi } from '../../lib/featureOverrides';
 
 interface PlatformSidebarProps {
   mobileOpen: boolean;
@@ -133,7 +134,7 @@ const adminMenu: MenuGroup[] = [
       { to: ROUTES.audit, label: 'Audit Log', icon: ShieldCheck, routeKey: 'audit' },
       { to: ROUTES.reports, label: 'Reports', icon: BarChart3, routeKey: 'reports', featureKey: 'bi' },
       { to: ROUTES.adminIntegrations, label: 'یکپارچه‌سازی', icon: Plug, routeKey: 'adminIntegrations' },
-      { to: ROUTES.automation, label: 'اتوماسیون', icon: Zap, routeKey: 'automation' },
+      { to: ROUTES.automation, label: 'اتوماسیون', icon: Zap, routeKey: 'automation', featureKey: 'aiAnalysis' },
       { to: ROUTES.workflows, label: 'Workflowها', icon: GitBranch, routeKey: 'workflows' },
       { to: ROUTES.adminAiPrep, label: 'آماده‌سازی AI', icon: Database, routeKey: 'adminAiPrep' },
       { to: ROUTES.adminKnowledge, label: 'پایگاه دانش', icon: BookOpen, routeKey: 'adminKnowledge' },
@@ -192,6 +193,13 @@ export const PlatformSidebar: React.FC<PlatformSidebarProps> = ({
   const { user, isDemoMode } = useAuth();
   const menuGroups = menusForRole(user?.role);
   const requestBadge = getMockRequests().filter((r) => r.status === 'submitted').length;
+  const [, featureTick] = React.useState(0);
+
+  React.useEffect(() => {
+    const onChange = () => featureTick((x) => x + 1);
+    window.addEventListener('decisionos-features-changed', onChange);
+    return () => window.removeEventListener('decisionos-features-changed', onChange);
+  }, []);
 
   const getBadge = (key?: 'cases' | 'notif' | 'requests') => {
     if (key === 'cases' && caseCount > 0) return String(caseCount);
@@ -203,6 +211,11 @@ export const PlatformSidebar: React.FC<PlatformSidebarProps> = ({
   const renderItem = (item: MenuItem) => {
     if (!canAccessRoute(user?.role, item.routeKey)) return null;
 
+    if (item.featureKey === 'chat' || item.featureKey === 'aiAnalysis') {
+      const def = isFeatureActive(item.featureKey);
+      if (!isFeatureEnabledForUi(item.featureKey, def)) return null;
+    }
+
     const badge = getBadge(item.badgeKey);
     const comingSoon = item.showComingSoon && item.featureKey ? featureBadge(item.featureKey) : null;
 
@@ -212,7 +225,7 @@ export const PlatformSidebar: React.FC<PlatformSidebarProps> = ({
         to={item.to}
         onClick={onCloseMobile}
         className={({ isActive }) =>
-          `flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors text-xs font-medium ${
+          `flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors text-xs font-medium focus-visible:ring-2 focus-visible:ring-blue-400 outline-none ${
             isActive
               ? 'bg-blue-600 text-white'
               : 'text-slate-300 hover:bg-slate-800 hover:text-white'

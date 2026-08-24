@@ -91,6 +91,7 @@ export const mockNotifications: AppNotification[] = [
     read: false,
     createdAt: '۱۴۰۳/۰۵/۰۱',
     type: 'info',
+    link: '/app/documents',
   },
   {
     id: 'notif-3',
@@ -101,6 +102,18 @@ export const mockNotifications: AppNotification[] = [
     read: true,
     createdAt: '۱۴۰۳/۰۴/۲۹',
     type: 'success',
+    link: '/app/cases/case-102',
+  },
+  {
+    id: 'notif-session-1',
+    userId: 'usr-3',
+    title: 'جلسه مشاوره نزدیک است',
+    body: 'جلسه با دکتر کریمی فردا ساعت ۱۱:۰۰',
+    channel: 'in_app',
+    read: false,
+    createdAt: '۱۴۰۳/۰۶/۱۹',
+    type: 'action',
+    link: '/app/sessions',
   },
 ];
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Users,
@@ -14,7 +14,7 @@ import {
   AlertTriangle,
   CheckCircle2,
 } from 'lucide-react';
-import { PageHeader, Badge, Button } from '../ui';
+import { PageHeader, Badge, Button, EmptyState } from '../ui';
 import { ROUTES } from '../../routes';
 import {
   getAdminPlatformKpis,
@@ -27,30 +27,42 @@ import {
 import { formatToman } from '../../lib/mock/expertStats';
 import { SimpleBarChart, SimpleDonutChart } from '../charts/SimpleCharts';
 
-/** Admin Control Center — updates/05 */
+const EMPTY_KEY = 'decisionos-admin-empty-org';
+
+/** Admin Control Center — updates/05 + v6 empty-org toggle */
 export const AdminDashboard: React.FC = () => {
+  const [emptyOrg, setEmptyOrg] = useState(() => localStorage.getItem(EMPTY_KEY) === '1');
   const kpis = getAdminPlatformKpis();
   const health = getSystemHealth();
-  const activities = getAdminActivities();
-  const newUsers = getNewUsers();
+  const activities = emptyOrg ? [] : getAdminActivities();
+  const newUsers = emptyOrg ? [] : getNewUsers();
+
+  const toggleEmpty = () => {
+    const next = !emptyOrg;
+    setEmptyOrg(next);
+    localStorage.setItem(EMPTY_KEY, next ? '1' : '0');
+  };
 
   const cards = [
-    { label: 'کاربران', value: kpis.totalUsers, icon: Users },
-    { label: 'متخصصان', value: kpis.totalExperts, icon: UserCheck },
-    { label: 'پروژه‌ها', value: kpis.totalProjects, icon: Gavel },
-    { label: 'اسناد', value: kpis.totalDocuments, icon: FileText },
-    { label: 'جلسات', value: kpis.totalSessions, icon: Video },
-    { label: 'درآمد کل', value: formatToman(kpis.totalRevenue), icon: Wallet, isText: true },
+    { label: 'کاربران', value: emptyOrg ? 0 : kpis.totalUsers, icon: Users },
+    { label: 'متخصصان', value: emptyOrg ? 0 : kpis.totalExperts, icon: UserCheck },
+    { label: 'پروژه‌ها', value: emptyOrg ? 0 : kpis.totalProjects, icon: Gavel },
+    { label: 'اسناد', value: emptyOrg ? 0 : kpis.totalDocuments, icon: FileText },
+    { label: 'جلسات', value: emptyOrg ? 0 : kpis.totalSessions, icon: Video },
+    { label: 'درآمد کل', value: emptyOrg ? '۰' : formatToman(kpis.totalRevenue), icon: Wallet, isText: true },
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 overflow-x-hidden">
       <PageHeader
         title="Admin Control Center"
         description="نظارت سراسری پلتفرم — کاربران، پروژه، سلامت سیستم"
         badge={<Badge tone="blue">Admin</Badge>}
         actions={
           <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant={emptyOrg ? 'primary' : 'outline'} onClick={toggleEmpty}>
+              {emptyOrg ? 'سازمان تازه ✓' : 'سازمان تازه'}
+            </Button>
             <Link to={ROUTES.adminMonitoring}>
               <Button size="sm" variant="outline">
                 <Activity className="w-3.5 h-3.5" /> Monitoring
@@ -65,29 +77,40 @@ export const AdminDashboard: React.FC = () => {
         }
       />
 
+      {emptyOrg && (
+        <EmptyState
+          title="حالت سازمان تازه (Demo)"
+          description="KPIها صفر شده‌اند تا نمای سازمان بدون داده دیده شود. دوباره روی دکمه بزنید تا داده پر برگردد."
+          actionLabel="بازگشت به داده پر"
+          onAction={toggleEmpty}
+        />
+      )}
+
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {cards.map((c) => (
-          <div key={c.label} className="p-4 rounded-xl border bg-white dark:bg-slate-900">
-            <c.icon className="w-4 h-4 text-blue-600 mb-2" />
+          <div key={c.label} className="dos-card p-4 rounded-[var(--dos-radius-lg)] border bg-white dark:bg-slate-900">
+            <c.icon className="w-4 h-4 text-[var(--dos-primary)] mb-2" />
             <div className={`font-black ${c.isText ? 'text-sm' : 'text-xl'}`}>{c.value}</div>
             <div className="text-[10px] text-slate-500">{c.label}</div>
           </div>
         ))}
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="bg-white dark:bg-slate-900 rounded-xl border p-4">
-          <h3 className="text-xs font-bold mb-3">روند رشد پروژه‌ها</h3>
-          <SimpleBarChart data={MOCK_GROWTH_SERIES.map((d) => ({ label: d.label, value: d.value }))} />
+      {!emptyOrg && (
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="bg-white dark:bg-slate-900 rounded-[var(--dos-radius-lg)] border p-4">
+            <h3 className="text-xs font-bold mb-3">روند رشد پروژه‌ها</h3>
+            <SimpleBarChart data={MOCK_GROWTH_SERIES.map((d) => ({ label: d.label, value: d.value }))} />
+          </div>
+          <div className="bg-white dark:bg-slate-900 rounded-[var(--dos-radius-lg)] border p-4">
+            <h3 className="text-xs font-bold mb-3">توزیع وضعیت پروژه‌ها</h3>
+            <SimpleDonutChart data={MOCK_PROJECT_DISTRIBUTION.map((d) => ({ label: d.label, value: d.value }))} />
+          </div>
         </div>
-        <div className="bg-white dark:bg-slate-900 rounded-xl border p-4">
-          <h3 className="text-xs font-bold mb-3">توزیع وضعیت پروژه‌ها</h3>
-          <SimpleDonutChart data={MOCK_PROJECT_DISTRIBUTION.map((d) => ({ label: d.label, value: d.value }))} />
-        </div>
-      </div>
+      )}
 
       <div className="grid lg:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-slate-900 rounded-xl border p-4 space-y-2">
+        <div className="bg-white dark:bg-slate-900 rounded-[var(--dos-radius-lg)] border p-4 space-y-2">
           <h3 className="text-xs font-bold mb-2">سلامت سیستم</h3>
           {health.map((h) => (
             <div key={h.id} className="flex items-center justify-between text-[11px] p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
@@ -107,27 +130,35 @@ export const AdminDashboard: React.FC = () => {
           ))}
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-xl border p-4 space-y-2">
+        <div className="bg-white dark:bg-slate-900 rounded-[var(--dos-radius-lg)] border p-4 space-y-2">
           <h3 className="text-xs font-bold mb-2">آخرین فعالیت‌های سیستم</h3>
-          {activities.map((a) => (
-            <div key={a.id} className="text-[11px] border-r-2 border-blue-500 pr-2 py-1">
-              <p className="font-semibold">{a.text}</p>
-              <p className="text-slate-400">{a.time}</p>
-            </div>
-          ))}
+          {activities.length === 0 ? (
+            <p className="text-[11px] text-slate-500 py-4 text-center">فعالیتی ثبت نشده</p>
+          ) : (
+            activities.map((a) => (
+              <div key={a.id} className="text-[11px] border-r-2 border-blue-500 pr-2 py-1">
+                <p className="font-semibold">{a.text}</p>
+                <p className="text-slate-400">{a.time}</p>
+              </div>
+            ))
+          )}
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-xl border p-4 space-y-2">
+        <div className="bg-white dark:bg-slate-900 rounded-[var(--dos-radius-lg)] border p-4 space-y-2">
           <h3 className="text-xs font-bold mb-2">کاربران جدید</h3>
-          {newUsers.map((u) => (
-            <div key={u.id} className="flex justify-between text-[11px] p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800">
-              <div>
-                <p className="font-bold">{u.name}</p>
-                <p className="text-slate-500">{u.role}</p>
+          {newUsers.length === 0 ? (
+            <p className="text-[11px] text-slate-500 py-4 text-center">کاربر جدیدی نیست</p>
+          ) : (
+            newUsers.map((u) => (
+              <div key={u.id} className="flex justify-between text-[11px] p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800">
+                <div>
+                  <p className="font-bold">{u.name}</p>
+                  <p className="text-slate-500">{u.role}</p>
+                </div>
+                <span className="text-slate-400">{u.joinedAt}</span>
               </div>
-              <span className="text-slate-400">{u.joinedAt}</span>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 

@@ -10,14 +10,17 @@ import {
   UserCircle,
   ChevronLeft,
 } from 'lucide-react';
-import { PageHeader, Badge, Button } from '../ui';
+import { PageHeader, Badge, Button, EmptyState } from '../ui';
 import { usePlatformData } from '../layout/PlatformLayout';
 import { ROUTES } from '../../routes';
 import { getMockRequests, getTodaySessions } from '../../lib/mock';
 import { getExpertDashboardStats, formatToman } from '../../lib/mock/expertStats';
 import { CASE_STATUS_LABELS } from '../../lib/labels';
 
-/** Expert Control Center — updates/05 */
+const WEEK_DAYS = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
+const CAL_MARKED = [3, 7, 12, 15, 18, 22];
+
+/** Expert Control Center — updates/05 + v6 calendar widget */
 export const ExpertDashboard: React.FC = () => {
   const { cases, user } = usePlatformData();
   const navigate = useNavigate();
@@ -42,7 +45,7 @@ export const ExpertDashboard: React.FC = () => {
   const maxStars = Math.max(...stats.ratingBreakdown.map((r) => r.count), 1);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 overflow-x-hidden">
       {joinToast && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs px-4 py-2 rounded-lg z-50">
           {joinToast}
@@ -56,8 +59,8 @@ export const ExpertDashboard: React.FC = () => {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {kpis.map((k) => (
-          <div key={k.label} className="p-4 rounded-xl border bg-white dark:bg-slate-900">
-            <k.icon className="w-4 h-4 text-blue-600 mb-2" />
+          <div key={k.label} className="dos-card p-4 rounded-[var(--dos-radius-lg)] border bg-white dark:bg-slate-900">
+            <k.icon className="w-4 h-4 text-[var(--dos-primary)] mb-2" />
             <div className="text-2xl font-black">{k.value}</div>
             <div className="text-[10px] text-slate-500">{k.label}</div>
           </div>
@@ -65,7 +68,7 @@ export const ExpertDashboard: React.FC = () => {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4">
-        <div className="bg-white dark:bg-slate-900 rounded-xl border p-4 space-y-2">
+        <div className="bg-white dark:bg-slate-900 rounded-[var(--dos-radius-lg)] border p-4 space-y-2">
           <div className="flex justify-between items-center mb-2">
             <h3 className="text-xs font-bold flex items-center gap-1">
               <Inbox className="w-3.5 h-3.5 text-amber-600" />
@@ -76,29 +79,43 @@ export const ExpertDashboard: React.FC = () => {
               همه
             </Link>
           </div>
-          {requests.map((r) => (
-            <div key={r.id} className="flex items-center justify-between p-2.5 rounded-lg border text-[11px]">
-              <div className="min-w-0">
-                <p className="font-bold truncate">{r.title}</p>
-                <p className="text-slate-500">{r.createdAt}</p>
+          {requests.length === 0 ? (
+            <EmptyState
+              title="درخواست جدیدی نیست"
+              description="وقتی مشتری درخواست مشاوره بفرستد اینجا ظاهر می‌شود."
+              actionLabel="مشاهده پروژه‌ها"
+              onAction={() => navigate(ROUTES.cases)}
+            />
+          ) : (
+            requests.map((r) => (
+              <div key={r.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-lg border text-[11px]">
+                <div className="min-w-0">
+                  <p className="font-bold truncate">{r.title}</p>
+                  <p className="text-slate-500">{r.createdAt}</p>
+                </div>
+                <Button size="sm" variant="outline" onClick={() => navigate(ROUTES.requestsList)}>
+                  مشاهده و پاسخ
+                </Button>
               </div>
-              <Button size="sm" variant="outline" onClick={() => navigate(ROUTES.requestsList)}>
-                مشاهده و پاسخ
-              </Button>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-xl border p-4 space-y-2">
+        <div className="bg-white dark:bg-slate-900 rounded-[var(--dos-radius-lg)] border p-4 space-y-2">
           <h3 className="text-xs font-bold flex items-center gap-1 mb-2">
             <Video className="w-3.5 h-3.5 text-emerald-600" />
             جلسات امروز
           </h3>
           {todaySessions.length === 0 ? (
-            <p className="text-[11px] text-slate-500">جلسه‌ای برای امروز نیست</p>
+            <EmptyState
+              title="جلسه‌ای برای امروز نیست"
+              description="تقویم را برای روزهای بعد ببینید."
+              actionLabel="تقویم"
+              onAction={() => navigate(ROUTES.calendar)}
+            />
           ) : (
             todaySessions.map((s) => (
-              <div key={s.id} className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 text-[11px]">
+              <div key={s.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 text-[11px]">
                 <div>
                   <p className="font-bold">{s.time} — {s.title}</p>
                   <p className="text-slate-500">{s.clientName || 'مشتری'}</p>
@@ -116,7 +133,7 @@ export const ExpertDashboard: React.FC = () => {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4">
-        <div className="bg-gradient-to-bl from-emerald-600 to-emerald-800 text-white rounded-xl p-5 space-y-2">
+        <div className="bg-gradient-to-bl from-emerald-600 to-emerald-800 text-white rounded-[var(--dos-radius-lg)] p-5 space-y-2">
           <p className="text-[10px] opacity-80 flex items-center gap-1">
             <Wallet className="w-3.5 h-3.5" /> درآمد ماهانه
           </p>
@@ -124,7 +141,7 @@ export const ExpertDashboard: React.FC = () => {
           <p className="text-[11px] text-emerald-100">+{stats.incomeGrowthPercent}٪ نسبت به ماه قبل</p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-xl border p-4 space-y-2">
+        <div className="bg-white dark:bg-slate-900 rounded-[var(--dos-radius-lg)] border p-4 space-y-2">
           <div className="flex justify-between">
             <h3 className="text-xs font-bold">تکمیل پروفایل</h3>
             <span className="text-xs font-black text-blue-600">{stats.profileCompletion}٪</span>
@@ -137,7 +154,55 @@ export const ExpertDashboard: React.FC = () => {
           </Link>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-xl border p-4 space-y-2">
+        <div className="bg-white dark:bg-slate-900 rounded-[var(--dos-radius-lg)] border p-4 space-y-2">
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-xs font-bold flex items-center gap-1">
+              <CalendarDays className="w-3.5 h-3.5" /> تقویم ماه
+            </h3>
+            <Link to={ROUTES.calendar} className="text-[10px] text-blue-600 font-bold">
+              باز کردن
+            </Link>
+          </div>
+          <div className="grid grid-cols-7 gap-0.5 text-center text-[9px] text-slate-400 mb-1">
+            {WEEK_DAYS.map((d) => (
+              <span key={d}>{d}</span>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-0.5">
+            {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
+              <div
+                key={day}
+                className={`aspect-square flex items-center justify-center rounded text-[10px] ${
+                  CAL_MARKED.includes(day) ? 'bg-blue-600 text-white font-bold' : 'bg-slate-50 dark:bg-slate-800 text-slate-600'
+                }`}
+              >
+                {day}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-4">
+        <div className="bg-white dark:bg-slate-900 rounded-[var(--dos-radius-lg)] border p-4 space-y-2">
+          <h3 className="text-xs font-bold mb-2">پروژه‌های ارجاع‌شده</h3>
+          {assigned.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => navigate(`${ROUTES.cases}/${c.id}`)}
+              className="w-full flex justify-between items-center text-[11px] p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-right focus-visible:ring-2 focus-visible:ring-blue-500 outline-none"
+            >
+              <span className="font-semibold line-clamp-1">{c.title}</span>
+              <Badge tone="blue">{CASE_STATUS_LABELS[c.status]}</Badge>
+            </button>
+          ))}
+          <Link to={ROUTES.cases} className="text-[10px] text-blue-600 font-bold flex items-center gap-0.5">
+            همه <ChevronLeft className="w-3 h-3" />
+          </Link>
+        </div>
+
+        <div className="bg-white dark:bg-slate-900 rounded-[var(--dos-radius-lg)] border p-4 space-y-3">
           <h3 className="text-xs font-bold flex items-center gap-1">
             <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
             امتیاز {stats.rating}
@@ -151,38 +216,13 @@ export const ExpertDashboard: React.FC = () => {
               <span className="text-slate-400 w-6">{r.count}</span>
             </div>
           ))}
-        </div>
-      </div>
-
-      <div className="grid lg:grid-cols-2 gap-4">
-        <div className="bg-white dark:bg-slate-900 rounded-xl border p-4 space-y-2">
-          <h3 className="text-xs font-bold mb-2">پروژه‌های ارجاع‌شده</h3>
-          {assigned.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => navigate(`${ROUTES.cases}/${c.id}`)}
-              className="w-full flex justify-between items-center text-[11px] p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-right"
-            >
-              <span className="font-semibold line-clamp-1">{c.title}</span>
-              <Badge tone="blue">{CASE_STATUS_LABELS[c.status]}</Badge>
-            </button>
-          ))}
-          <Link to={ROUTES.cases} className="text-[10px] text-blue-600 font-bold flex items-center gap-0.5">
-            همه <ChevronLeft className="w-3 h-3" />
-          </Link>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 rounded-xl border p-4 space-y-3">
-          <h3 className="text-xs font-bold">نظرات اخیر</h3>
-          {stats.reviews.map((rev) => (
+          {stats.reviews.slice(0, 2).map((rev) => (
             <div key={rev.id} className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 text-[11px]">
               <div className="flex justify-between mb-1">
                 <span className="font-bold">{rev.clientName}</span>
                 <span className="text-amber-600">{'★'.repeat(rev.rating)}</span>
               </div>
               <p className="text-slate-600 dark:text-slate-400">{rev.comment}</p>
-              <p className="text-slate-400 mt-1">{rev.date}</p>
             </div>
           ))}
         </div>

@@ -6,6 +6,7 @@ import { ROUTES } from '../routes';
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../types';
 import { ROLE_LABELS } from '../lib/labels';
+import { getPostLoginRoute } from '../lib/mockAuth';
 
 export const RegisterPage: React.FC = () => {
   const { register } = useAuth();
@@ -21,9 +22,10 @@ export const RegisterPage: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await register({ name, email, password, role });
+      localStorage.removeItem('decisionos-onboarding-done');
+      const user = await register({ name, email, password, role });
       setToast('ثبت‌نام موفق (نسخه نمایشی) — در حال ورود...');
-      setTimeout(() => navigate(ROUTES.dashboard), 800);
+      setTimeout(() => navigate(getPostLoginRoute(user.role)), 800);
     } finally {
       setLoading(false);
     }

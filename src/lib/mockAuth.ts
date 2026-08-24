@@ -80,6 +80,17 @@ export function getDemoUserForRole(role: UserRole): User {
   return { ...DEMO_ROLE_USERS[role] };
 }
 
+/** Quick login presets for demo (todo-v6) */
+export const QUICK_LOGIN_PRESETS: { role: UserRole; label: string; email: string; password: string }[] = [
+  { role: 'customer', label: 'مشتری', email: 'client@pars-omid.ir', password: '123456' },
+  { role: 'expert', label: 'متخصص', email: 'sadeghi@decisionos.ir', password: '123456' },
+  { role: 'admin', label: 'مدیر', email: 'admin@decisionos.ir', password: '123456' },
+];
+
+export function getQuickLoginPreset(role: 'customer' | 'expert' | 'admin') {
+  return QUICK_LOGIN_PRESETS.find((p) => p.role === role)!;
+}
+
 export function loadStoredUser(): User | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
