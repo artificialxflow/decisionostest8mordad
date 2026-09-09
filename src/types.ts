@@ -82,6 +82,29 @@ export interface CaseHistoryEntry {
   details?: string;
 }
 
+/** v7 service type ids — defined early for CaseItem */
+export type ServiceTypeId =
+  | 'PROPERTY_INVESTMENT'
+  | 'PROPERTY_TRANSACTION'
+  | 'LEGAL_CASE'
+  | 'CONTRACT_ANALYSIS'
+  | 'AUCTION'
+  | 'TENDER'
+  | 'INVESTMENT_ADVISORY'
+  | 'TECHNOLOGY';
+
+export interface PropertyCandidate {
+  id: string;
+  title: string;
+  areaSqm?: number;
+  rooms?: number;
+  ageYears?: number;
+  price?: number;
+  parking?: number;
+  address?: string;
+  matchScore?: number;
+}
+
 export interface CaseItem {
   id: string;
   title: string;
@@ -104,6 +127,12 @@ export interface CaseItem {
   legalDetails?: LegalDetails;
   realEstateDetails?: RealEstateDetails;
   history?: CaseHistoryEntry[];
+  /** v7 */
+  serviceTypeId?: ServiceTypeId;
+  serviceRecordId?: string;
+  propertyCandidates?: PropertyCandidate[];
+  paymentUnlockedExperts?: boolean;
+  systemReplyShown?: boolean;
 }
 
 export interface CaseNote {
@@ -242,6 +271,14 @@ export interface RequestItem {
   documentIds?: string[];
   createdAt: string;
   updatedAt: string;
+  /** v7 */
+  serviceTypeId?: ServiceTypeId;
+  serviceRecordId?: string;
+  priority?: CasePriority;
+  source?: string;
+  formData?: Record<string, string | number | string[] | null>;
+  paymentStatus?: 'none' | 'pending' | 'paid';
+  systemReply?: string;
 }
 
 export interface ExpertProfile {
@@ -371,3 +408,108 @@ export interface SatisfactionRecord {
   comment?: string;
   submittedAt: string;
 }
+
+/* ─── DecisionOS v7: Service → Record → Case → KB ─── */
+
+export type FieldImportance = 'required' | 'preferred' | 'not_required' | 'unknown';
+export type FieldConfidence = 'high' | 'medium' | 'low';
+export type FieldValueKind = 'fact' | 'preference';
+export type FieldSourceKind = 'user' | 'document' | 'extraction' | 'system';
+
+export type FormFieldType =
+  | 'text'
+  | 'textarea'
+  | 'number'
+  | 'currency'
+  | 'enum'
+  | 'date'
+  | 'multi-select'
+  | 'range'
+  | 'importance';
+
+export interface FormFieldOption {
+  value: string;
+  label: string;
+}
+
+export interface FormFieldDef {
+  fieldId: string;
+  label: string;
+  type: FormFieldType;
+  required?: boolean;
+  kind?: FieldValueKind;
+  placeholder?: string;
+  options?: FormFieldOption[];
+  min?: number;
+  max?: number;
+  unit?: string;
+  hint?: string;
+}
+
+export interface FormSectionDef {
+  id: string;
+  title: string;
+  description?: string;
+  fields: FormFieldDef[];
+}
+
+export interface FormSchemaDef {
+  id: string;
+  version: string;
+  serviceTypeId: ServiceTypeId;
+  title: string;
+  sections: FormSectionDef[];
+}
+
+export interface ServiceTypeRegistryEntry {
+  serviceId: ServiceTypeId;
+  name: string;
+  category: ServiceCategory | 'technology' | 'auction' | 'tender';
+  version: string;
+  active: boolean;
+  formSchemaId: string;
+  caseSchemaSections: string[];
+  workflow: string[];
+  permissions: string[];
+  aiCapabilities: string[];
+  agents: string[];
+  icon: string;
+  description: string;
+  legacyServiceIds?: string[];
+  sortOrder: number;
+}
+
+export interface FieldSource {
+  kind: FieldSourceKind;
+  label: string;
+  documentId?: string;
+  page?: number;
+  chunkId?: string;
+  extractionMethod?: string;
+}
+
+export interface StructuredFieldValue {
+  fieldId: string;
+  value: string | number | string[] | null;
+  kind: FieldValueKind;
+  importance?: FieldImportance;
+  confidence?: FieldConfidence;
+  sources: FieldSource[];
+}
+
+export interface ServiceRecord {
+  recordId: string;
+  caseId: string;
+  serviceTypeId: ServiceTypeId;
+  formSchemaId: string;
+  version: string;
+  data: Record<string, string | number | string[] | null>;
+  structuredFields?: StructuredFieldValue[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ExpertApprovalStatus = 'pending' | 'approved' | 'rejected';
+
+export type KbUpdateMode = 'internal_only' | 'allow_external';
+export type SystemReplySourceMode = 'general' | 'knowledge_base';

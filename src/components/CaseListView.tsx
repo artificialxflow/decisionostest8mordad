@@ -19,6 +19,7 @@ import { CaseItem, CaseCategory, CaseStatus } from '../types';
 import { EmptyState } from './ui/EmptyState';
 import { ALL_CASE_STATUSES, CASE_STATUS_LABELS, CASE_STATUS_COLORS } from '../lib/labels';
 import { useAuth } from '../context/AuthContext';
+import { getServiceRegistry } from '../lib/mock';
 
 interface CaseListViewProps {
   cases: CaseItem[];
@@ -40,10 +41,11 @@ export const CaseListView: React.FC<CaseListViewProps> = ({
   const [activeTab, setActiveTab] = useState<'all' | CaseCategory>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') || 'all');
-  const [serviceFilter, setServiceFilter] = useState('all');
+  const [serviceTypeFilter, setServiceTypeFilter] = useState<string>('all');
   const [expertFilter, setExpertFilter] = useState('all');
   const [sortBy, setSortBy] = useState<'newest' | 'deadline' | 'priority'>('newest');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const registry = getServiceRegistry();
 
   useEffect(() => {
     const s = searchParams.get('status');
@@ -64,7 +66,7 @@ export const CaseListView: React.FC<CaseListViewProps> = ({
     .filter((c) => {
       if (activeTab !== 'all' && c.category !== activeTab) return false;
       if (statusFilter !== 'all' && c.status !== statusFilter) return false;
-      if (serviceFilter !== 'all' && c.serviceId !== serviceFilter) return false;
+      if (serviceTypeFilter !== 'all' && c.serviceTypeId !== serviceTypeFilter) return false;
       if (expertFilter !== 'all' && c.assignedExpertId !== expertFilter) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -85,14 +87,18 @@ export const CaseListView: React.FC<CaseListViewProps> = ({
       return b.updatedAt.localeCompare(a.updatedAt);
     });
 
-  const hasActiveFilters = searchQuery.trim() !== '' || statusFilter !== 'all' || activeTab !== 'all';
+  const hasActiveFilters =
+    searchQuery.trim() !== '' ||
+    statusFilter !== 'all' ||
+    activeTab !== 'all' ||
+    serviceTypeFilter !== 'all';
   const isEmptySystem = cases.length === 0;
   const isEmptyFiltered = !isEmptySystem && filteredCases.length === 0;
 
   const clearFilters = () => {
     setSearchQuery('');
     setStatusFilter('all');
-    setServiceFilter('all');
+    setServiceTypeFilter('all');
     setExpertFilter('all');
     setActiveTab('all');
     setSearchParams({});
@@ -185,6 +191,38 @@ export const CaseListView: React.FC<CaseListViewProps> = ({
           </div>
         </div>
 
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            type="button"
+            onClick={() => setServiceTypeFilter('all')}
+            className={`text-[10px] px-2.5 py-1 rounded-full border transition-colors ${
+              serviceTypeFilter === 'all'
+                ? 'bg-teal-700 text-white border-teal-700'
+                : 'bg-white text-slate-600 border-slate-200 hover:border-teal-300'
+            }`}
+          >
+            همه خدمات تخصصی
+          </button>
+          {registry.map((s) => {
+            const count = cases.filter((c) => c.serviceTypeId === s.serviceId).length;
+            return (
+              <button
+                key={s.serviceId}
+                type="button"
+                onClick={() => setServiceTypeFilter(s.serviceId)}
+                className={`text-[10px] px-2.5 py-1 rounded-full border transition-colors ${
+                  serviceTypeFilter === s.serviceId
+                    ? 'bg-teal-700 text-white border-teal-700'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-teal-300'
+                }`}
+              >
+                {s.name}
+                {count > 0 ? ` (${count})` : ''}
+              </button>
+            );
+          })}
+        </div>
+
         {/* Search & Status Filters */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="md:col-span-2 relative">
@@ -234,6 +272,11 @@ export const CaseListView: React.FC<CaseListViewProps> = ({
             <>
               {statusFilter !== 'all' && (
                 <span className="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">{CASE_STATUS_LABELS[statusFilter as CaseStatus]}</span>
+              )}
+              {serviceTypeFilter !== 'all' && (
+                <span className="text-[10px] bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full">
+                  {registry.find((s) => s.serviceId === serviceTypeFilter)?.name ?? serviceTypeFilter}
+                </span>
               )}
               <button type="button" onClick={clearFilters} className="text-[10px] text-red-600 font-bold">
                 پاک کردن همه
@@ -285,6 +328,11 @@ export const CaseListView: React.FC<CaseListViewProps> = ({
                     <span className="text-[10px] font-mono font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
                       #{c.caseNumber}
                     </span>
+                    {c.serviceTypeId && (
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-teal-50 text-teal-800 border border-teal-100">
+                        {registry.find((s) => s.serviceId === c.serviceTypeId)?.name ?? c.serviceTypeId}
+                      </span>
+                    )}
                   </div>
 
                   <span

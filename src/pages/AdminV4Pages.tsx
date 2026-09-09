@@ -4,7 +4,8 @@ import { PageHeader, Badge, Button } from '../components/ui';
 import { MOCK_MONITORING } from '../lib/mock/monitoring';
 import { Sparkline } from '../components/charts/SimpleCharts';
 import { getIntegrations, toggleIntegration, testIntegration, IntegrationConfig } from '../lib/mock/integrations';
-import { getKnowledgeDocs, addKnowledgeDoc, KnowledgeDoc } from '../lib/mock/knowledge';
+import { getKnowledgeDocs, addKnowledgeDoc, KnowledgeDoc, getKbUpdateMode, setKbUpdateMode, getReplySourceMode, setReplySourceMode } from '../lib/mock/knowledge';
+import { RagPipelineDemo } from '../components/RagPipelineDemo';
 import { getAiQueue, AiQueueItem } from '../lib/mock/aiAgentQueue';
 
 export const MonitoringDashboardPage: React.FC = () => {
@@ -115,31 +116,97 @@ export const AiDataPrepPage: React.FC = () => {
 export const KnowledgeBaseAdminPage: React.FC = () => {
   const [docs, setDocs] = useState<KnowledgeDoc[]>(() => getKnowledgeDocs());
   const [title, setTitle] = useState('');
+  const [kbMode, setKbMode] = useState(() => getKbUpdateMode());
+  const [replyMode, setReplyMode] = useState(() => getReplySourceMode());
 
   const upload = () => {
     if (!title.trim()) return;
-    addKnowledgeDoc(title, 'law');
+    addKnowledgeDoc(title, 'law', 'platform');
     setDocs(getKnowledgeDocs());
     setTitle('');
   };
 
   return (
     <div className="space-y-5">
-      <PageHeader title="پایگاه دانش" description="اسناد حقوقی برای RAG — mock" />
+      <PageHeader
+        title="پایگاه دانش"
+        description="اسناد برای پاسخ سیستم و RAG نمایشی — Frontend only"
+        badge={<Badge tone="amber">RAG demo</Badge>}
+      />
+
+      <div className="grid sm:grid-cols-2 gap-3">
+        <div className="p-4 border rounded-xl bg-white dark:bg-slate-900 space-y-2">
+          <p className="text-xs font-bold">منبع به‌روزرسانی سیستم</p>
+          <p className="text-[10px] text-slate-500">Frontend only — not connected to the internet</p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setKbUpdateMode('internal_only');
+                setKbMode('internal_only');
+              }}
+              className={`text-[11px] px-3 py-1.5 rounded-lg border ${kbMode === 'internal_only' ? 'bg-teal-600 text-white border-teal-600' : 'bg-slate-50'}`}
+            >
+              فقط KB داخلی
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setKbUpdateMode('allow_external');
+                setKbMode('allow_external');
+              }}
+              className={`text-[11px] px-3 py-1.5 rounded-lg border ${kbMode === 'allow_external' ? 'bg-teal-600 text-white border-teal-600' : 'bg-slate-50'}`}
+            >
+              مجاز به منبع بیرونی (دمو)
+            </button>
+          </div>
+        </div>
+        <div className="p-4 border rounded-xl bg-white dark:bg-slate-900 space-y-2">
+          <p className="text-xs font-bold">منبع پاسخ سیستم (داخلی)</p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setReplySourceMode('knowledge_base');
+                setReplyMode('knowledge_base');
+              }}
+              className={`text-[11px] px-3 py-1.5 rounded-lg border ${replyMode === 'knowledge_base' ? 'bg-slate-900 text-white' : 'bg-slate-50'}`}
+            >
+              پایگاه دانش سایت
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setReplySourceMode('general');
+                setReplyMode('general');
+              }}
+              className={`text-[11px] px-3 py-1.5 rounded-lg border ${replyMode === 'general' ? 'bg-slate-900 text-white' : 'bg-slate-50'}`}
+            >
+              عمومی (mock)
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="flex gap-2">
-        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="عنوان سند..." className="flex-1 border rounded-md px-3 py-2 text-xs" />
+        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="عنوان سند PDF…" className="flex-1 border rounded-md px-3 py-2 text-xs" />
         <Button size="sm" onClick={upload}>
-          Upload (mock)
+          Upload PDF (mock)
         </Button>
       </div>
       <div className="divide-y border rounded-lg bg-white dark:bg-slate-900">
         {docs.map((d) => (
-          <div key={d.id} className="flex justify-between p-3 text-xs">
-            <span>{d.title}</span>
+          <div key={d.id} className="flex justify-between p-3 text-xs gap-2">
+            <div>
+              <span className="font-medium">{d.title}</span>
+              <span className="text-[10px] text-slate-400 mr-2"> · {d.owner === 'expert' ? 'KB کارشناس' : 'KB سراسری'}</span>
+            </div>
             <Badge tone={d.indexed ? 'green' : 'amber'}>{d.indexed ? 'Indexed' : 'Pending'}</Badge>
           </div>
         ))}
       </div>
+      <p className="text-[10px] text-slate-500">آمادگی Vector DB: Frontend only — not connected</p>
+      <RagPipelineDemo />
     </div>
   );
 };

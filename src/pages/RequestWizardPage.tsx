@@ -1,74 +1,127 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { Check, ChevronLeft, ChevronRight, Upload, FileText, Building2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Upload,
+  FileText,
+  Sparkles,
+  Lock,
+  Unlock,
+  MessageSquareText,
+} from 'lucide-react';
 import { PageHeader, Button, Badge, EmptyState } from '../components/ui';
-import { getMockServices, submitMockRequest } from '../lib/mock';
+import {
+  getMockServices,
+  submitMockRequest,
+  getServiceRegistry,
+  getFormSchemaForService,
+  serviceTypeIdForCatalog,
+  generateSystemReply,
+  getServiceById,
+} from '../lib/mock';
 import { useAuth } from '../context/AuthContext';
 import { ROUTES } from '../routes';
 import { ExpertMatchingPanel } from '../components/ExpertMatchingPanel';
-import { ServiceItem } from '../types';
-import {
-  HOLDING_SERVICE_CATEGORIES,
-  filterServicesByHoldingCategory,
-  getTenantDisplayName,
-  getHoldingCategoryForService,
-} from '../lib/mock/organizations';
+import { ServiceFormRenderer, validateFormSchema } from '../components/ServiceFormRenderer';
+import { ServiceItem, ServiceTypeId } from '../types';
 
-const STEPS = ['دسته هلدینگ', 'انتخاب خدمت', 'اطلاعات', 'مدارک', 'بررسی', 'ثبت'];
+const STEPS = ['خدمت', 'فرم تخصصی', 'مدارک', 'پاسخ سیستم', 'بررسی', 'متخصص'];
 
 export const RequestWizardPage: React.FC = () => {
   const [params] = useSearchParams();
   const preselected = params.get('serviceId');
   const { user } = useAuth();
   const navigate = useNavigate();
-  const allServices = getMockServices().filter((s) => s.status !== 'inactive');
-  const tenantName = getTenantDisplayName(user?.organization);
-
-  const preselectedService = preselected ? allServices.find((s) => s.id === preselected) : undefined;
-  const initialHolding = preselectedService
-    ? getHoldingCategoryForService(preselectedService.category)
-    : null;
+  const catalog = getMockServices().filter((s) => s.status !== 'inactive');
+  const registry = getServiceRegistry().filter((s) => s.active);
 
   const [step, setStep] = useState(0);
-  const [holdingCategoryId, setHoldingCategoryId] = useState<string | null>(initialHolding);
-  const [serviceId, setServiceId] = useState(preselected || '');
+  const [serviceTypeId, setServiceTypeId] = useState<ServiceTypeId | null>(null);
   const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [formValues, setFormValues] = useState<Record<string, string | number | string[] | null>>({});
   const [files, setFiles] = useState<{ name: string; size: string; preview?: string }[]>([]);
   const [uploadToast, setUploadToast] = useState('');
   const [error, setError] = useState('');
+  const [systemReply, setSystemReply] = useState('');
+  const [replyReady, setReplyReady] = useState(false);
+  const [paymentDone, setPaymentDone] = useState(false);
+  const [paying, setPaying] = useState(false);
 
-  const filteredServices = useMemo(
-    () => filterServicesByHoldingCategory(allServices, holdingCategoryId),
-    [allServices, holdingCategoryId]
-  );
+  const entry = serviceTypeId ? getServiceById(serviceTypeId) : undefined;
+  const schema = serviceTypeId ? getFormSchemaForService(serviceTypeId) : undefined;
+  const catalogService: ServiceItem | undefined = serviceTypeId
+    ? catalog.find((s) => serviceTypeIdForCatalog(s.id) === serviceTypeId) ?? catalog[0]
+    : undefined;
 
-  const selected = allServices.find((s) => s.id === serviceId);
-  const selectedHolding = HOLDING_SERVICE_CATEGORIES.find((c) => c.id === holdingCategoryId);
+  useEffect(() => {
+    if (!preselected) return;
+    const st = serviceTypeIdForCatalog(preselected);
+    setServiceTypeId(st);
+  }, [preselected]);
+
+  useEffect(() => {
+    setFormValues({});
+    setTitle('');
+    setSystemReply('');
+    setReplyReady(false);
+    setPaymentDone(false);
+  }, [serviceTypeId]);
 
   const canNext = () => {
-    if (step === 0) return !!holdingCategoryId;
-    if (step === 1) return !!serviceId;
-    if (step === 2) return title.trim().length >= 3 && description.trim().length >= 10;
-    if (step === 3) return true;
+    if (step === 0) return !!serviceTypeId;
+    if (step === 1) {
+      if (!schema) return false;
+      if (title.trim().length < 3) return false;
+      return validateFormSchema(schema, formValues).ok;
+    }
+    if (step === 2) return true;
+    if (step === 3) return replyReady;
+    if (step === 4) return true;
+    if (step === 5) return paymentDone;
     return true;
   };
 
+  const prepareReply = () => {
+    if (!entry) return;
+    setReplyReady(false);
+    setTimeout(() => {
+      setSystemReply(generateSystemReply(entry.name, title || entry.name, formValues));
+      setReplyReady(true);
+    }, 900);
+  };
+
+  const handlePay = () => {
+    setPaying(true);
+    setTimeout(() => {
+      setPaying(false);
+      setPaymentDone(true);
+    }, 800);
+  };
+
   const handleSubmit = () => {
-    if (!user || !selected) return;
+    if (!user || !catalogService || !serviceTypeId) return;
     const result = submitMockRequest({
-      serviceId: selected.id,
+      serviceId: catalogService.id,
       customerId: user.id,
-      title,
-      description,
+      title: title || entry?.name || 'درخواست',
+      description: systemReply.slice(0, 180) || 'ثبت از فرم تخصصی',
+      formData: formValues,
+      serviceTypeId,
+      paymentStatus: paymentDone ? 'paid' : 'none',
+      systemReply,
     });
     navigate(ROUTES.requestSuccess, {
       state: {
         requestId: result.request.id,
         caseId: result.caseId,
         workspaceId: result.workspaceId,
-        serviceTitle: selected.title,
-        holdingCategory: selectedHolding?.label,
+        caseNumber: result.caseNumber,
+        serviceTitle: entry?.name,
+        serviceTypeId,
+        paymentUnlocked: paymentDone,
       },
     });
   };
@@ -88,48 +141,87 @@ export const RequestWizardPage: React.FC = () => {
 
   const goNext = () => {
     if (!canNext()) {
-      setError('لطفاً فیلدهای الزامی را تکمیل کنید.');
+      if (step === 1 && schema) {
+        const { missing } = validateFormSchema(schema, formValues);
+        setError(missing.length ? `فیلدهای الزامی: ${missing.join('، ')}` : 'عنوان را تکمیل کنید.');
+      } else if (step === 5 && !paymentDone) {
+        setError('برای دیدن متخصصان، ابتدا مشاوره تخصصی را فعال کنید.');
+      } else {
+        setError('لطفاً این مرحله را تکمیل کنید.');
+      }
       return;
     }
     setError('');
-    if (step === 0) setServiceId('');
+    if (step === 2) prepareReply();
+    if (step === 4 && !paymentDone) {
+      // stay allowed to review; experts on next step locked until pay
+    }
+    if (step === 5) {
+      handleSubmit();
+      return;
+    }
     setStep((s) => s + 1);
   };
 
   const goBack = () => {
     setError('');
-    if (step === 1) setServiceId('');
-    setStep((s) => s - 1);
+    setStep((s) => Math.max(0, s - 1));
   };
 
+  const keySummary = useMemo(() => {
+    if (!schema) return [];
+    return schema.sections
+      .flatMap((s) => s.fields)
+      .filter((f) => formValues[f.fieldId] !== null && formValues[f.fieldId] !== undefined && formValues[f.fieldId] !== '')
+      .slice(0, 8)
+      .map((f) => ({
+        label: f.label,
+        kind: f.kind,
+        value: Array.isArray(formValues[f.fieldId])
+          ? (formValues[f.fieldId] as string[]).join('، ')
+          : String(formValues[f.fieldId]),
+      }));
+  }, [schema, formValues]);
+
   return (
-    <div className="space-y-5 max-w-2xl mx-auto">
-      <div className="flex items-center gap-3 p-4 rounded-lg bg-slate-900 text-white">
-        <Building2 className="w-8 h-8 text-amber-400 shrink-0" />
-        <div>
-          <p className="text-[10px] text-slate-400">سقف هلدینگ / Tenant</p>
-          <p className="text-sm font-bold">{tenantName}</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">ابتدا دسته را انتخاب کنید، سپس خدمت همان دسته</p>
+    <div className="space-y-5 max-w-3xl mx-auto">
+      <div className="relative overflow-hidden rounded-2xl border border-teal-800/20 bg-gradient-to-bl from-slate-900 via-slate-900 to-teal-950 text-white p-5">
+        <div className="absolute inset-0 opacity-30 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-teal-400/40 via-transparent to-transparent" />
+        <div className="relative flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center shrink-0">
+            <Sparkles className="w-5 h-5 text-teal-300" />
+          </div>
+          <div>
+            <p className="text-[10px] text-teal-200/80 tracking-wide">DecisionOS · ثبت خدمت تخصصی</p>
+            <p className="text-sm font-black mt-0.5">خدمت → فرم تخصصی → پاسخ سیستم → (اختیاری) متخصص</p>
+            <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
+              ابتدا پاسخ اولیه رایگان دریافت می‌کنید. معرفی متخصصان فقط پس از فعال‌سازی مشاوره تخصصی نمایش داده می‌شود.
+            </p>
+          </div>
         </div>
       </div>
 
       <PageHeader
         title="ثبت درخواست خدمت"
-        description="دسته هلدینگ → انتخاب خدمت → اطلاعات → مدارک → ثبت نهایی"
-        badge={<Badge tone="blue">Request Wizard</Badge>}
+        description="فرم متناسب با نوع خدمت — اطلاعات به‌صورت رکورد ساختاریافته ذخیره می‌شود"
+        badge={<Badge tone="blue">v7 Intake</Badge>}
       />
 
       <div className="flex items-center gap-1 overflow-x-auto pb-2">
         {STEPS.map((label, i) => (
           <div key={label} className="flex items-center gap-1 shrink-0">
             <div
-              className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                i < step ? 'bg-emerald-500 text-white' : i === step ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${
+                i < step
+                  ? 'bg-teal-600 text-white'
+                  : i === step
+                    ? 'bg-slate-900 text-white ring-2 ring-teal-400/50'
+                    : 'bg-slate-200 text-slate-500'
               }`}
             >
-              {i < step ? <Check className="w-3 h-3" /> : i + 1}
+              {i < step ? <Check className="w-3.5 h-3.5" /> : i + 1}
             </div>
-            <span className={`text-[10px] font-medium ${i === step ? 'text-blue-700' : 'text-slate-500'}`}>
+            <span className={`text-[10px] font-medium ${i === step ? 'text-slate-900 dark:text-white' : 'text-slate-500'}`}>
               {label}
             </span>
             {i < STEPS.length - 1 && <ChevronLeft className="w-3 h-3 text-slate-300 mx-1" />}
@@ -137,141 +229,183 @@ export const RequestWizardPage: React.FC = () => {
         ))}
       </div>
 
-      {error && <p className="text-xs text-red-600">{error}</p>}
-
-      {step === 0 && (
-        <div className="grid sm:grid-cols-2 gap-3">
-          {HOLDING_SERVICE_CATEGORIES.map((cat) => (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() => setHoldingCategoryId(cat.id)}
-              className={`text-right p-4 rounded-lg border transition-all ${
-                holdingCategoryId === cat.id
-                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30'
-                  : 'border-slate-200 dark:border-slate-800 hover:border-blue-300'
-              }`}
-            >
-              <p className="text-sm font-bold">{cat.label}</p>
-              <p className="text-[11px] text-slate-500 mt-1">{cat.desc}</p>
-            </button>
-          ))}
-        </div>
+      {error && (
+        <p className="text-xs text-rose-600 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-lg px-3 py-2">
+          {error}
+        </p>
       )}
 
-      {step === 1 && (
-        <div className="space-y-3">
-          {selectedHolding && (
-            <p className="text-xs text-slate-600">
-              دسته انتخاب‌شده: <strong>{selectedHolding.label}</strong>
-              {' '}— فقط خدمات مرتبط نمایش داده می‌شوند
-            </p>
-          )}
-          <div className="grid sm:grid-cols-2 gap-3">
-            {filteredServices.length === 0 ? (
-              <EmptyState title="خدمتی در این دسته یافت نشد" description="دسته دیگری انتخاب کنید." />
-            ) : (
-              filteredServices.map((s: ServiceItem) => (
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={step}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.2 }}
+        >
+          {step === 0 && (
+            <div className="grid sm:grid-cols-2 gap-3">
+              {registry.map((s) => (
                 <button
-                  key={s.id}
+                  key={s.serviceId}
                   type="button"
-                  onClick={() => setServiceId(s.id)}
-                  className={`text-right p-4 rounded-lg border transition-all ${
-                    serviceId === s.id
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30'
-                      : 'border-slate-200 dark:border-slate-800 hover:border-blue-300'
+                  onClick={() => setServiceTypeId(s.serviceId)}
+                  className={`text-right p-4 rounded-xl border transition-all ${
+                    serviceTypeId === s.serviceId
+                      ? 'border-teal-500 bg-teal-50/80 dark:bg-teal-950/30 shadow-sm'
+                      : 'border-slate-200 dark:border-slate-800 hover:border-teal-300 bg-white dark:bg-slate-900'
                   }`}
                 >
-                  <p className="text-sm font-bold">{s.title}</p>
+                  <p className="text-sm font-bold">{s.name}</p>
                   <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">{s.description}</p>
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {s.aiCapabilities.slice(0, 2).map((c) => (
+                      <span key={c} className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600">
+                        {c}
+                      </span>
+                    ))}
+                  </div>
                 </button>
-              ))
-            )}
-          </div>
-        </div>
-      )}
+              ))}
+            </div>
+          )}
 
-      {step === 2 && (
-        <div className="space-y-3 bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800">
-          <div>
-            <label className="text-xs font-bold">عنوان درخواست *</label>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full mt-1 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-2 text-xs"
-              placeholder="مثال: بررسی سند ملکی..."
-            />
-          </div>
-          <div>
-            <label className="text-xs font-bold">شرح درخواست * (حداقل ۱۰ کاراکتر)</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={4}
-              className="w-full mt-1 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-2 text-xs"
-            />
-          </div>
-        </div>
-      )}
+          {step === 1 && schema && (
+            <div className="space-y-4">
+              <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+                <label className="text-xs font-bold">عنوان درخواست *</label>
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full mt-1 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-teal-500/30 outline-none"
+                  placeholder={`مثال: ${entry?.name} — درخواست جدید`}
+                />
+              </div>
+              <ServiceFormRenderer schema={schema} values={formValues} onChange={setFormValues} />
+            </div>
+          )}
 
-      {step === 3 && (
-        <div className="space-y-4">
-          <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-8 text-center space-y-3">
-            <Upload className="w-8 h-8 text-blue-600 mx-auto" />
-            <p className="text-xs font-bold">بارگذاری مدارک مورد نیاز</p>
-            {selected?.requiredDocuments && (
-              <p className="text-[10px] text-slate-500">مدارک: {selected.requiredDocuments.join('، ')}</p>
-            )}
-            <label className="inline-block cursor-pointer text-xs text-blue-600 font-bold">
-              <input type="file" multiple accept=".pdf,image/*" onChange={(e) => handleFiles(e.target.files)} className="hidden" />
-              انتخاب فایل
-            </label>
-            {uploadToast && <p className="text-xs text-emerald-600 font-bold">{uploadToast}</p>}
-            {files.length > 0 && (
-              <ul className="text-xs space-y-2 mt-4">
-                {files.map((f) => (
-                  <li key={f.name} className="flex items-center gap-2 justify-center p-2 rounded border bg-slate-50 dark:bg-slate-800">
-                    {f.preview ? (
-                      <img src={f.preview} alt="" className="w-10 h-10 object-cover rounded" />
-                    ) : (
-                      <FileText className="w-4 h-4" />
-                    )}
-                    {f.name} — {f.size}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          {selected && <ExpertMatchingPanel serviceTitle={selected.title} compact />}
-        </div>
-      )}
+          {step === 2 && (
+            <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-8 text-center space-y-3 bg-white/60 dark:bg-slate-900/60">
+              <Upload className="w-8 h-8 text-teal-600 mx-auto" />
+              <p className="text-xs font-bold">بارگذاری مدارک (نمایشی)</p>
+              <p className="text-[10px] text-slate-500">مدارک بعداً به پرونده و پایگاه دانش همان Case متصل می‌شوند</p>
+              <label className="inline-block cursor-pointer text-xs text-teal-700 font-bold">
+                <input type="file" multiple accept=".pdf,image/*" onChange={(e) => handleFiles(e.target.files)} className="hidden" />
+                انتخاب فایل
+              </label>
+              {uploadToast && <p className="text-xs text-emerald-600 font-bold">{uploadToast}</p>}
+              {files.length > 0 && (
+                <ul className="text-xs space-y-2 mt-4">
+                  {files.map((f) => (
+                    <li key={f.name} className="flex items-center gap-2 justify-center p-2 rounded-lg border bg-slate-50 dark:bg-slate-800">
+                      {f.preview ? <img src={f.preview} alt="" className="w-10 h-10 object-cover rounded" /> : <FileText className="w-4 h-4" />}
+                      {f.name} — {f.size}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
 
-      {step === 4 && selected && (
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border space-y-2 text-xs">
-          <p><span className="font-bold">هلدینگ:</span> {tenantName}</p>
-          <p><span className="font-bold">دسته:</span> {selectedHolding?.label}</p>
-          <p><span className="font-bold">خدمت:</span> {selected.title}</p>
-          <p><span className="font-bold">عنوان:</span> {title}</p>
-          <p><span className="font-bold">شرح:</span> {description}</p>
-          <p><span className="font-bold">مدارک:</span> {files.length} فایل</p>
-        </div>
-      )}
+          {step === 3 && (
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+              <div className="px-4 py-3 border-b bg-gradient-to-l from-teal-50 to-white dark:from-teal-950/40 dark:to-slate-900 flex items-center gap-2">
+                <MessageSquareText className="w-4 h-4 text-teal-700" />
+                <p className="text-xs font-bold">پاسخ سیستم</p>
+                <Badge tone="green">رایگان / محدود</Badge>
+              </div>
+              <div className="p-5 min-h-[120px]">
+                {!replyReady ? (
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
+                    در حال آماده‌سازی پاسخ اولیه…
+                  </div>
+                ) : (
+                  <p className="text-sm leading-7 text-slate-700 dark:text-slate-200">{systemReply}</p>
+                )}
+              </div>
+              {replyReady && (
+                <div className="px-4 py-3 border-t text-[11px] text-slate-500 bg-slate-50 dark:bg-slate-950/50">
+                  اگر این پاسخ کافی نیست، در مرحله بعد می‌توانید مشاوره تخصصی را فعال کنید.
+                </div>
+              )}
+            </div>
+          )}
 
-      {step === 5 && (
-        <div className="text-center space-y-3 py-6">
-          <Check className="w-12 h-12 text-emerald-500 mx-auto" />
-          <p className="text-sm font-bold">آماده ثبت نهایی</p>
-          <Button onClick={handleSubmit}>ثبت درخواست</Button>
-        </div>
-      )}
+          {step === 4 && (
+            <div className="space-y-4">
+              <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border space-y-2 text-xs">
+                <p>
+                  <span className="font-bold">خدمت:</span> {entry?.name}
+                </p>
+                <p>
+                  <span className="font-bold">عنوان:</span> {title}
+                </p>
+                <p>
+                  <span className="font-bold">مدارک:</span> {files.length} فایل
+                </p>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-2">
+                {keySummary.length === 0 ? (
+                  <EmptyState title="فیلدی ثبت نشده" description="به مرحله فرم برگردید." />
+                ) : (
+                  keySummary.map((k) => (
+                    <div key={k.label} className="p-3 rounded-lg border bg-slate-50 dark:bg-slate-900 text-xs">
+                      <div className="flex justify-between gap-2 mb-1">
+                        <span className="text-slate-500">{k.label}</span>
+                        <Badge tone={k.kind === 'preference' ? 'amber' : 'blue'}>
+                          {k.kind === 'preference' ? 'ترجیح' : 'قطعی'}
+                        </Badge>
+                      </div>
+                      <p className="font-bold text-slate-800 dark:text-slate-100">{k.value}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
 
-      <div className="flex justify-between pt-4">
+          {step === 5 && (
+            <div className="space-y-4">
+              {!paymentDone ? (
+                <div className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/60 dark:bg-amber-950/20 p-5 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-amber-700" />
+                    <p className="text-sm font-bold text-amber-900 dark:text-amber-100">متخصصان هنوز نمایش داده نمی‌شوند</p>
+                  </div>
+                  <p className="text-xs text-amber-900/80 dark:text-amber-100/70 leading-relaxed">
+                    مطابق مسیر محصول: پاسخ اولیه رایگان است. برای معرفی و انتخاب متخصص، مشاوره تخصصی را فعال کنید (پرداخت نمایشی).
+                  </p>
+                  <Button size="sm" onClick={handlePay} disabled={paying}>
+                    {paying ? 'در حال فعال‌سازی…' : 'فعال‌سازی مشاوره تخصصی (دمو)'}
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={handleSubmit}>
+                    ثبت فقط با پاسخ سیستم (بدون متخصص)
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-emerald-700 text-xs font-bold">
+                    <Unlock className="w-4 h-4" />
+                    مشاوره تخصصی فعال شد — می‌توانید متخصص را ببینید و درخواست را ثبت کنید
+                  </div>
+                  {entry && <ExpertMatchingPanel serviceTitle={entry.name} compact />}
+                  <Button onClick={handleSubmit}>ثبت نهایی درخواست + پرونده</Button>
+                </div>
+              )}
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
+
+      <div className="flex justify-between pt-2">
         <Button variant="ghost" size="sm" disabled={step === 0} onClick={goBack}>
           <ChevronRight className="w-4 h-4" />
           قبلی
         </Button>
         {step < 5 && (
-          <Button size="sm" disabled={!canNext()} onClick={goNext}>
+          <Button size="sm" onClick={goNext}>
             بعدی
             <ChevronLeft className="w-4 h-4" />
           </Button>
@@ -284,31 +418,41 @@ export const RequestWizardPage: React.FC = () => {
 export const RequestSuccessPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const data = (location.state as {
-    requestId?: string;
-    caseId?: string;
-    workspaceId?: string;
-    serviceTitle?: string;
-    holdingCategory?: string;
-  }) || {};
+  const data =
+    (location.state as {
+      requestId?: string;
+      caseId?: string;
+      workspaceId?: string;
+      caseNumber?: string;
+      serviceTitle?: string;
+      serviceTypeId?: string;
+      paymentUnlocked?: boolean;
+    }) || {};
 
   return (
     <div className="max-w-md mx-auto text-center space-y-4 py-10">
-      <Check className="w-14 h-14 text-emerald-500 mx-auto" />
-      <h1 className="text-lg font-black">درخواست با موفقیت ثبت شد</h1>
-      {data.holdingCategory && <p className="text-xs text-slate-500">دسته: {data.holdingCategory}</p>}
+      <div className="w-16 h-16 mx-auto rounded-2xl bg-teal-500/15 flex items-center justify-center">
+        <Check className="w-8 h-8 text-teal-600" />
+      </div>
+      <h1 className="text-lg font-black">درخواست و پرونده تخصصی ثبت شد</h1>
       {data.serviceTitle && <p className="text-xs text-slate-500">خدمت: {data.serviceTitle}</p>}
-      <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 text-xs space-y-2 text-right font-mono">
-        {data.requestId && <p>Request ID: {data.requestId}</p>}
-        {data.caseId && <p>Case ID: {data.caseId}</p>}
-        {data.workspaceId && <p>Workspace ID: {data.workspaceId}</p>}
+      <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-4 text-xs space-y-2 text-right border">
+        {data.caseNumber && (
+          <p>
+            <span className="text-slate-500">شماره پرونده:</span>{' '}
+            <span className="font-mono font-bold">{data.caseNumber}</span>
+          </p>
+        )}
+        {data.requestId && <p className="font-mono text-slate-500">{data.requestId}</p>}
+        {data.caseId && <p className="font-mono text-slate-500">{data.caseId}</p>}
+        <Badge tone={data.paymentUnlocked ? 'green' : 'amber'}>
+          {data.paymentUnlocked ? 'متخصص آزاد شده' : 'فقط پاسخ سیستم'}
+        </Badge>
       </div>
       <div className="flex gap-2 justify-center flex-wrap">
-        <Button onClick={() => navigate(data.workspaceId ? `/app/workspace/${data.workspaceId}` : ROUTES.workspace)}>
-          رفتن به Workspace
-        </Button>
-        <Button variant="outline" onClick={() => navigate(ROUTES.cases)}>
-          پرونده‌ها
+        <Button onClick={() => navigate(data.caseId ? `/app/cases/${data.caseId}` : ROUTES.cases)}>مشاهده پرونده</Button>
+        <Button variant="outline" onClick={() => navigate(ROUTES.requestsList)}>
+          لیست درخواست‌ها
         </Button>
       </div>
     </div>

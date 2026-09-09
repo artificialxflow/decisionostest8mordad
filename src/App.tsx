@@ -53,6 +53,7 @@ import { ExpertProfilePage } from './pages/ExpertsPage';
 import { OrganizationsPage } from './pages/OrganizationsPage';
 import { AutomationPage } from './pages/PlaceholderPages';
 import { BlogListPage, BlogPostPage } from './pages/blog/BlogPages';
+import { ExpertApprovalsPage } from './pages/ExpertApprovalsPage';
 import { ROUTES } from './routes';
 
 function DraftReviewRoute() {
@@ -135,6 +136,7 @@ export default function App() {
                 <Route path="admin/integrations" element={<IntegrationsPage />} />
                 <Route path="admin/ai-prep" element={<AiDataPrepPage />} />
                 <Route path="admin/knowledge" element={<KnowledgeBaseAdminPage />} />
+                <Route path="admin/expert-approvals" element={<ExpertApprovalsPage />} />
                 <Route path="settings/organizations" element={<OrganizationsPage />} />
               </Route>
 

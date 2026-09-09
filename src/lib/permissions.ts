@@ -55,6 +55,7 @@ export type RouteKey =
   | 'adminIntegrations'
   | 'adminAiPrep'
   | 'adminKnowledge'
+  | 'adminExpertApprovals'
   | 'aiQueue';
 
 const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
@@ -182,6 +183,7 @@ const ROUTE_PERMISSIONS: Record<RouteKey, Permission> = {
   adminIntegrations: 'view_admin',
   adminAiPrep: 'view_admin',
   adminKnowledge: 'view_admin',
+  adminExpertApprovals: 'manage_experts',
   aiQueue: 'view_dashboard',
 };
 

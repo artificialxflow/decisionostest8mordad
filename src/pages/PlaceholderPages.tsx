@@ -278,7 +278,7 @@ export const SupportPage = () => {
       purpose="مشتریان داخل Workspace می‌توانند تیکت ثبت کنند. سؤالات عمومی از FAQ پاسخ داده می‌شود. تیکت‌ها به دسته خدمت (قرارداد، بیمه، حسابداری…) مسیریابی می‌شوند."
       demoUI
     >
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-2 gap-4 text-base">
         <form
           className="bg-white dark:bg-slate-900 border rounded-lg p-5 space-y-3"
           onSubmit={(e) => {
@@ -286,25 +286,35 @@ export const SupportPage = () => {
             setSubmitted(true);
           }}
         >
-          <h3 className="text-sm font-bold">ثبت تیکت</h3>
-          <select className="w-full border rounded-md px-3 py-2 text-xs" defaultValue="">
-            <option value="" disabled>دسته موضوع</option>
+          <h3 className="text-base font-bold">ثبت تیکت</h3>
+          <select className="w-full border rounded-md px-3 py-2.5 text-sm" defaultValue="">
+            <option value="" disabled>
+              دسته موضوع
+            </option>
             <option>قرارداد</option>
-            <option>بیمه</option>
+            <option>فناوری</option>
             <option>حسابداری</option>
             <option>ثبت‌نام / فنی</option>
           </select>
-          <input className="w-full border rounded-md px-3 py-2 text-xs" placeholder="موضوع" required />
-          <textarea className="w-full border rounded-md px-3 py-2 text-xs" rows={4} placeholder="شرح مشکل..." required />
-          <Button type="submit" size="sm">ارسال تیکت (نمایشی)</Button>
-          {submitted && <p className="text-xs text-emerald-600">تیکت ثبت شد — پاسخ در ۲۴ ساعت (mock)</p>}
+          <input className="w-full border rounded-md px-3 py-2.5 text-sm" placeholder="موضوع" required />
+          <textarea className="w-full border rounded-md px-3 py-2.5 text-sm" rows={4} placeholder="شرح مشکل..." required />
+          <Button type="submit" size="sm">
+            ارسال تیکت (نمایشی)
+          </Button>
+          {submitted && <p className="text-sm text-emerald-600">تیکت ثبت شد — پاسخ در ۲۴ ساعت (mock)</p>}
         </form>
         <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-5 space-y-2">
-          <h3 className="text-sm font-bold">سؤالات متداول و Demo</h3>
-          <p className="text-xs text-slate-600 dark:text-slate-400">برای سؤالات عمومی به FAQ مراجعه کنید.</p>
-          <Link to={ROUTES.faq} className="text-xs text-blue-600 font-bold inline-block">رفتن به FAQ →</Link>
-          <p className="text-xs text-slate-600 dark:text-slate-400 pt-2">مسیر نمایش کارفرما: فایل <code className="text-[10px]">docs/demo-script-v6.md</code></p>
-          <Link to={ROUTES.settings} className="text-xs text-blue-600 font-bold inline-block">تنظیمات و Feature flags →</Link>
+          <h3 className="text-base font-bold">سؤالات متداول و Demo</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">برای سؤالات عمومی به FAQ مراجعه کنید.</p>
+          <Link to={ROUTES.faq} className="text-sm text-blue-600 font-bold inline-block">
+            رفتن به FAQ →
+          </Link>
+          <p className="text-sm text-slate-600 dark:text-slate-400 pt-2">
+            مسیر نمایش کارفرما: فایل <code className="text-xs">docs/demo-script-v6.md</code>
+          </p>
+          <Link to={ROUTES.settings} className="text-sm text-blue-600 font-bold inline-block">
+            تنظیمات و Feature flags →
+          </Link>
         </div>
       </div>
     </FeaturePage>

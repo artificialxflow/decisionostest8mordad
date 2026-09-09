@@ -51,6 +51,7 @@ export const ROUTES = {
   adminIntegrations: '/app/admin/integrations',
   adminAiPrep: '/app/admin/ai-prep',
   adminKnowledge: '/app/admin/knowledge',
+  adminExpertApprovals: '/app/admin/expert-approvals',
   aiQueue: '/app/ai-queue',
   blogPost: '/blog/:slug',
 } as const;

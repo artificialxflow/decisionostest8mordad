@@ -1,104 +1,42 @@
-import { ServiceItem, ExpertProfile, RequestItem, TimelineEventItem } from '../../types';
+import { ServiceItem, ExpertProfile, RequestItem, TimelineEventItem, ServiceTypeId } from '../../types';
 import { MOCK_EXPERTS_FULL } from './experts';
+import {
+  getServiceRegistry,
+  resolveServiceTypeFromLegacy,
+  generateSystemReply,
+  getServiceById,
+} from './serviceRegistry';
+import { createServiceRecord, nextCaseNumber } from './serviceRecords';
 
-export const MOCK_SERVICES: ServiceItem[] = [
-  {
-    id: 's1',
-    title: 'حقوقی',
-    category: 'legal',
-    description: 'مدیریت دعاوی، لایحه و پیگیری قضایی',
-    icon: 'Scale',
-    requiredDocuments: ['شناسنامه', 'وکالتنامه'],
-    estimatedTime: '۷–۱۴ روز',
-    pricingType: 'quote',
-    status: 'active',
-    sortOrder: 1,
-  },
-  {
-    id: 's2',
-    title: 'قراردادی',
-    category: 'contract',
-    description: 'تنظیم، بازبینی و ریسک‌سنجی قراردادها',
-    icon: 'FileSignature',
-    requiredDocuments: ['پیش‌نویس قرارداد'],
-    estimatedTime: '۳–۷ روز',
-    pricingType: 'fixed',
-    status: 'active',
-    sortOrder: 2,
-  },
-  {
-    id: 's3',
-    title: 'املاک و ثبتی',
-    category: 'real_estate',
-    description: 'ریسک ثبتی، سند و معاملات ملکی',
-    icon: 'Building2',
-    requiredDocuments: ['سند مالکیت', 'کارت ملی'],
-    estimatedTime: '۵–۱۰ روز',
-    pricingType: 'quote',
-    status: 'active',
-    sortOrder: 3,
-  },
-  {
-    id: 's4',
-    title: 'بیمه',
-    category: 'insurance',
-    description: 'بررسی پوشش و اختلافات بیمه‌ای',
-    icon: 'Shield',
-    requiredDocuments: ['بیمه‌نامه'],
-    estimatedTime: '۳–۵ روز',
-    pricingType: 'hourly',
-    status: 'active',
-    sortOrder: 4,
-  },
-  {
-    id: 's5',
-    title: 'مالی و حسابداری',
-    category: 'accounting',
-    description: 'اسناد مالی مرتبط با پرونده',
-    icon: 'Calculator',
-    requiredDocuments: ['صورت‌حساب'],
-    estimatedTime: '۵ روز',
-    pricingType: 'hourly',
-    status: 'active',
-    sortOrder: 5,
-  },
-  {
-    id: 's6',
-    title: 'سرمایه‌گذاری',
-    category: 'investment',
-    description: 'ارزیابی حقوقی طرح‌های سرمایه‌گذاری',
-    icon: 'TrendingUp',
-    requiredDocuments: ['طرح سرمایه‌گذاری'],
-    estimatedTime: '۱۰ روز',
-    pricingType: 'quote',
-    status: 'active',
-    sortOrder: 6,
-  },
-  {
-    id: 's7',
-    title: 'کسب‌وکار',
-    category: 'business',
-    description: 'مشاوره سازمانی و حاکمیت شرکتی',
-    icon: 'Briefcase',
-    requiredDocuments: ['اساسنامه'],
-    estimatedTime: '۷ روز',
-    pricingType: 'quote',
-    status: 'active',
-    sortOrder: 7,
-  },
-  {
-    id: 's8',
-    title: 'تحلیل داده',
-    category: 'finance',
-    description: 'تحلیل داده‌های حقوقی و مالی پرونده',
-    icon: 'Wallet',
-    requiredDocuments: ['فایل داده'],
-    estimatedTime: '۵ روز',
-    pricingType: 'hourly',
-    status: 'active',
-    sortOrder: 8,
-  },
-];
+export const MOCK_SERVICES: ServiceItem[] = getServiceRegistry()
+  .filter((s) => s.active)
+  .map((s) => ({
+  id: s.legacyServiceIds?.[0] ?? `svc-${s.serviceId}`,
+  title: s.name,
+  category: (s.category === 'auction' || s.category === 'tender' || s.category === 'technology'
+    ? s.category === 'technology'
+      ? 'business'
+      : 'real_estate'
+    : s.category) as ServiceItem['category'],
+  description: s.description,
+  icon: s.icon,
+  requiredDocuments: ['مدارک هویتی', 'اسناد مرتبط با خدمت'],
+  estimatedTime: '۳–۱۰ روز',
+  pricingType: 'quote' as const,
+  status: 'active' as const,
+  sortOrder: s.sortOrder,
+  features: s.aiCapabilities.slice(0, 3),
+  ctaLabel: 'شروع درخواست',
+}));
+
+/** Map catalog service id → ServiceTypeId */
+export function serviceTypeIdForCatalog(serviceId: string): ServiceTypeId {
+  return (
+    resolveServiceTypeFromLegacy(serviceId) ??
+    getServiceRegistry().find((s) => `svc-${s.serviceId}` === serviceId)?.serviceId ??
+    'LEGAL_CASE'
+  );
+}
 
 export const MOCK_EXPERTS: ExpertProfile[] = MOCK_EXPERTS_FULL;
 
@@ -124,6 +62,9 @@ export * from './aiAgentQueue';
 export * from './sessions';
 export * from './expertStats';
 export * from './adminSystem';
+export * from './expertOnboarding';
+export * from './serviceRegistry';
+export * from './serviceRecords';
 
 export {
   getMockTasks,
@@ -143,6 +84,9 @@ let mockRequests: RequestItem[] = [
     status: 'submitted',
     caseId: 'case-101',
     workspaceId: 'ws-1',
+    serviceTypeId: 'PROPERTY_INVESTMENT',
+    serviceRecordId: 'rec-seed-inv',
+    paymentStatus: 'none',
     createdAt: '1403/05/01',
     updatedAt: '1403/05/01',
   },
@@ -155,6 +99,9 @@ let mockRequests: RequestItem[] = [
     status: 'reviewing',
     caseId: 'case-102',
     workspaceId: 'ws-1',
+    serviceTypeId: 'LEGAL_CASE',
+    serviceRecordId: 'rec-seed-leg',
+    paymentStatus: 'paid',
     createdAt: '1403/05/10',
     updatedAt: '1403/05/12',
   },
@@ -177,11 +124,34 @@ export function submitMockRequest(data: {
   customerId: string;
   title: string;
   description: string;
-}): { request: RequestItem; caseId: string; workspaceId: string } {
+  formData?: Record<string, string | number | string[] | null>;
+  serviceTypeId?: ServiceTypeId;
+  paymentStatus?: 'none' | 'pending' | 'paid';
+  systemReply?: string;
+}): {
+  request: RequestItem;
+  caseId: string;
+  workspaceId: string;
+  caseNumber: string;
+  serviceRecordId: string;
+} {
   const ts = new Date().toLocaleDateString('fa-IR');
   const requestId = `req-${Date.now()}`;
   const caseId = `case-${Date.now()}`;
   const workspaceId = `ws-${Date.now()}`;
+  const serviceTypeId = data.serviceTypeId ?? serviceTypeIdForCatalog(data.serviceId);
+  const caseNumber = nextCaseNumber(serviceTypeId);
+  const entry = getServiceById(serviceTypeId);
+
+  const record = createServiceRecord({
+    caseId,
+    serviceTypeId,
+    data: data.formData ?? {},
+  });
+
+  const systemReply =
+    data.systemReply ??
+    generateSystemReply(entry?.name ?? 'خدمت', data.title, data.formData ?? {});
 
   const request: RequestItem = {
     id: requestId,
@@ -192,12 +162,19 @@ export function submitMockRequest(data: {
     status: 'submitted',
     caseId,
     workspaceId,
+    serviceTypeId,
+    serviceRecordId: record.recordId,
+    formData: data.formData,
+    paymentStatus: data.paymentStatus ?? 'none',
+    systemReply,
+    priority: 'medium',
+    source: 'web',
     createdAt: ts,
     updatedAt: ts,
   };
 
   mockRequests = [request, ...mockRequests];
-  return { request, caseId, workspaceId };
+  return { request, caseId, workspaceId, caseNumber, serviceRecordId: record.recordId };
 }
 
 export function getMockTimelineEvents(caseId?: string, workspaceId?: string): TimelineEventItem[] {

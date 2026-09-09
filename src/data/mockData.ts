@@ -145,7 +145,7 @@ export const initialCases: CaseItem[] = [
   {
     id: 'case-101',
     title: 'دعوای الزام به تنظیم سند رسمی و خلع ید - برج تجاری آریا',
-    caseNumber: '۱۴۰۲/۹۹/۱۲۳۴',
+    caseNumber: 'INV-1405-000101',
     category: 'real_estate',
     status: 'waiting_customer',
     priority: 'high',
@@ -156,6 +156,8 @@ export const initialCases: CaseItem[] = [
     deadline: '۱۴۰۳/۰۶/۱۵',
     progress: 65,
     workspaceId: 'ws-1',
+    serviceTypeId: 'PROPERTY_INVESTMENT',
+    serviceRecordId: 'rec-seed-inv',
     createdAt: '۱۴۰۲/۰۶/۱۵',
     updatedAt: '۱۴۰۳/۰۴/۲۹',
     history: [
@@ -206,7 +208,7 @@ export const initialCases: CaseItem[] = [
   {
     id: 'case-102',
     title: 'فسخ قرارداد مشارکت در ساخت و مطالبه وجه التزام - پروژه سعادت‌آباد',
-    caseNumber: '۱۴۰۳/۱۰۱/۸۸۷',
+    caseNumber: 'LEG-1405-000102',
     category: 'legal',
     status: 'under_review',
     priority: 'high',
@@ -217,6 +219,8 @@ export const initialCases: CaseItem[] = [
     deadline: '۱۴۰۳/۰۵/۳۰',
     progress: 40,
     workspaceId: 'ws-1',
+    serviceTypeId: 'LEGAL_CASE',
+    serviceRecordId: 'rec-seed-leg',
     createdAt: '۱۴۰۲/۱۱/۰۴',
     updatedAt: '۱۴۰۳/۰۵/۰۱',
     history: [

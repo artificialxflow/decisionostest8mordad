@@ -35,31 +35,41 @@ const features = [
 const industries = [
   { id: 'legal', label: 'حقوقی' },
   { id: 'real_estate', label: 'املاک' },
-  { id: 'insurance', label: 'بیمه' },
-  { id: 'finance', label: 'مالی و مالیاتی' },
+  { id: 'investment', label: 'سرمایه‌گذاری' },
+  { id: 'contract', label: 'قرارداد' },
+  { id: 'auction', label: 'مزایده' },
+  { id: 'tender', label: 'مناقصه' },
   { id: 'it', label: 'فناوری' },
-  { id: 'engineering', label: 'مهندسی' },
 ];
 
-/** Public Landing — مطابق updates/05؛ بدون داده خصوصی کاربر */
+const journey = [
+  { title: 'نیاز را مشخص کنید', desc: 'مشکل حقوقی، قرارداد، سرمایه‌گذاری یا مزایده؟' },
+  { title: 'پاسخ اولیه سیستم', desc: 'مشاوره اولیه رایگان/محدود — بدون نمایش متخصص' },
+  { title: 'در صورت نیاز، متخصص', desc: 'پس از فعال‌سازی، کارشناسان مرتبط را ببینید' },
+];
+
+/** Public Landing — مطابق updates/05 + 06/03 */
 export const LandingPage: React.FC = () => {
   return (
     <div className="text-right">
       {/* Hero — روشن مطابق mockup */}
-      <section className="relative overflow-hidden border-b border-slate-200 dark:border-slate-800 bg-gradient-to-bl from-white via-slate-50 to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-        <div className="max-w-6xl mx-auto px-4 py-14 md:py-20 grid lg:grid-cols-2 gap-10 items-center">
+      <section className="relative overflow-hidden border-b border-slate-200 dark:border-slate-800 bg-gradient-to-bl from-white via-teal-50/40 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+        <div className="absolute inset-0 pointer-events-none opacity-40 bg-[radial-gradient(ellipse_at_top_right,_rgba(13,148,136,0.18),_transparent_55%)]" />
+        <div className="max-w-6xl mx-auto px-4 py-14 md:py-20 grid lg:grid-cols-2 gap-10 items-center relative">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             className="space-y-5"
           >
-            <Badge tone="blue">پلتفرم هوشمند تصمیم‌سازی</Badge>
-            <h1 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white leading-tight">
-              تصمیم‌های بهتر
-              <span className="block text-blue-600">با DecisionOS</span>
+            <Badge tone="blue">تصمیم‌های بهتر با DecisionOS</Badge>
+            <h1 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white leading-tight tracking-tight">
+              DecisionOS
+              <span className="block text-teal-700 dark:text-teal-400 text-2xl md:text-3xl mt-2 font-bold">
+                مشکل‌یاب و تصمیم‌یار تخصصی
+              </span>
             </h1>
             <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-lg">
-              مدیریت پروژه، همکاری با متخصصان و تصمیم‌گیری داده‌محور — در یک پلتفرم امن و یکپارچه.
+              کمک می‌کنیم بفهمید چه می‌خواهید — قرارداد، سرمایه‌گذاری، دعوای حقوقی یا مزایده — سپس با فرم تخصصی، پاسخ اولیه سیستم و در صورت نیاز کارشناس، مسیر تصمیم را شفاف می‌کنیم.
             </p>
             <div className="flex flex-wrap gap-2 pt-1">
               <Link to={ROUTES.register}>
@@ -70,17 +80,14 @@ export const LandingPage: React.FC = () => {
                   ورود
                 </Button>
               </Link>
-              <Link to={ROUTES.about}>
+              <Link to={ROUTES.pricing}>
                 <Button size="lg" variant="secondary">
-                  بیشتر بدانید
+                  تعرفه
                 </Button>
               </Link>
             </div>
             <p className="text-[11px] text-slate-500 pt-2">
-              Demo سریع:{' '}
-              <Link to={ROUTES.login} className="text-blue-600 font-bold">
-                ورود به‌عنوان مشتری / متخصص / مدیر
-              </Link>
+              پلن اولیه: ورود رایگان + پاسخ سیستم. معرفی متخصص پس از فعال‌سازی مشاوره تخصصی.
             </p>
           </motion.div>
 
@@ -118,6 +125,26 @@ export const LandingPage: React.FC = () => {
               </div>
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-4 py-10">
+        <h2 className="text-lg font-black mb-4 text-center">مسیر ساده از نیاز تا تصمیم</h2>
+        <div className="grid md:grid-cols-3 gap-3">
+          {journey.map((j, i) => (
+            <motion.div
+              key={j.title}
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08 }}
+              className="p-4 rounded-xl border border-teal-100 dark:border-teal-900/40 bg-white dark:bg-slate-900"
+            >
+              <p className="text-[10px] font-bold text-teal-700 mb-1">قدم {i + 1}</p>
+              <h3 className="text-sm font-bold">{j.title}</h3>
+              <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">{j.desc}</p>
+            </motion.div>
+          ))}
         </div>
       </section>
 

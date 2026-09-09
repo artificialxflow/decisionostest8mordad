@@ -68,10 +68,10 @@ export const MOCK_INVITES: TenantInvite[] = [
 
 export const HOLDING_SERVICE_CATEGORIES = [
   { id: 'legal', label: 'حقوق', desc: 'دعاوی، لایحه، مشاوره حقوقی' },
-  { id: 'contract', label: 'قرارداد', desc: 'تنظیم و بازبینی قراردادها' },
-  { id: 'insurance', label: 'بیمه', desc: 'اختلافات و پوشش بیمه‌ای' },
+  { id: 'contract', label: 'قرارداد', desc: 'تنظیم، بازبینی و بیمه در قراردادها' },
+  { id: 'technology', label: 'فناوری', desc: 'نرم‌افزار، شبکه و پروژه‌های فنی' },
   { id: 'accounting', label: 'حسابداری', desc: 'اسناد مالی و مالیاتی' },
-  { id: 'real_estate', label: 'املاک', desc: 'ثبت، سند و معاملات ملکی' },
+  { id: 'real_estate', label: 'املاک', desc: 'ثبت، سند، معامله، مزایده و مناقصه' },
   { id: 'business', label: 'کسب‌وکار', desc: 'ثبت شرکت، سرمایه‌گذاری و حاکمیت شرکتی' },
 ];
 
@@ -79,7 +79,7 @@ export const HOLDING_SERVICE_CATEGORIES = [
 export const HOLDING_TO_SERVICE_CATEGORIES: Record<string, string[]> = {
   legal: ['legal'],
   contract: ['contract'],
-  insurance: ['insurance'],
+  technology: ['business'],
   accounting: ['accounting', 'finance'],
   real_estate: ['real_estate'],
   business: ['business', 'investment'],

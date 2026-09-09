@@ -18,6 +18,7 @@ import {
   Calendar,
   UserCheck,
   Upload,
+  Layers,
 } from 'lucide-react';
 import { CaseItem, CaseNote, DocumentItem, CaseReport, CaseStatus } from '../types';
 import { ReportPrintModal } from './ReportPrintModal';
@@ -33,6 +34,7 @@ import { CaseCommentThread } from './CaseCommentThread';
 import { SatisfactionSurveyModal } from './SatisfactionSurveyModal';
 import { AiAnalysisPanel } from './AiAnalysisPanel';
 import { getSatisfactionForCase } from '../lib/mock/satisfaction';
+import { ServiceRecordPanel } from './ServiceRecordPanel';
 
 interface CaseDetailViewProps {
   caseId: string;
@@ -55,7 +57,7 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({
   const [notes, setNotes] = useState<CaseNote[]>([]);
   const [report, setReport] = useState<CaseReport | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'ai' | 'docs' | 'notes' | 'comments' | 'audit'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'record' | 'ai' | 'docs' | 'notes' | 'comments' | 'audit'>('overview');
   const [isAnalyzingAI, setIsAnalyzingAI] = useState(false);
   const [showSurvey, setShowSurvey] = useState(false);
   const [satisfactionDone, setSatisfactionDone] = useState(() => !!getSatisfactionForCase(caseId));
@@ -386,6 +388,18 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({
           </button>
 
           <button
+            onClick={() => setActiveTab('record')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+              activeTab === 'record'
+                ? 'bg-teal-700 text-white shadow-xs'
+                : 'bg-teal-50 text-teal-900 hover:bg-teal-100'
+            }`}
+          >
+            <Layers className="w-4 h-4" />
+            <span>رکورد تخصصی</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('ai')}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
               activeTab === 'ai'
@@ -394,7 +408,7 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({
             }`}
           >
             <Sparkles className="w-4 h-4 text-amber-700" />
-            <span>تحلیل هوش مصنوعی & ارزیابی ریسک</span>
+            <span>پاسخ سیستم / تحلیل</span>
           </button>
 
           <button
@@ -444,6 +458,12 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({
       />
 
       <CaseStatusBar currentStatus={caseItem.status} />
+
+      {activeTab === 'record' && (
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+          <ServiceRecordPanel caseItem={caseItem} />
+        </div>
+      )}
 
       {/* TAB CONTENT 1: OVERVIEW */}
       {activeTab === 'overview' && (

@@ -1,0 +1,709 @@
+﻿[8/29/2026 1:05 AM] میرزاده دایی شهرام: خلاصه وضعیت
+این نکته‌ای که اضافه کردید، یک نیازمندی معماری مهم برای DecisionOS است و باید قبل از نهایی‌کردن Sprint 3 وارد طراحی شود؛ چون اگر الآن برای آن ساختار داده تعریف نشود، در Sprintهای بعدی مجبور به بازطراحی Case، فرم‌ها، RAG و Agentها خواهیم شد.
+منطق صحیح این است که DecisionOS فقط یک «پرونده عمومی» نداشته باشد. بلکه:
+هر خدمت → فرم و رکورد تخصصی خودش → پرونده تخصصی خودش → اسناد و اطلاعات مرتبط → موتور تحلیل مخصوص آن خدمت
+را داشته باشد.
+
+1. معماری جدید مورد تأیید برای DecisionOS
+ساختار مرکزی را این‌گونه در نظر بگیریم:
+کاربر
+  │
+  ▼
+ثبت درخواست خدمت
+  │
+  ▼
+Service Type
+  │
+  ├──────────────┬───────────────┬──────────────┬──────────────┐
+  ▼              ▼               ▼              ▼
+سرمایه‌گذاری   حقوقی          خرید ملک       مزایده/مناقصه
+  │              │               │              │
+  ▼              ▼               ▼              ▼
+فرم تخصصی      فرم تخصصی      فرم تخصصی      فرم تخصصی
+  │              │               │              │
+  ▼              ▼               ▼              ▼
+رکورد تخصصی    رکورد تخصصی    رکورد تخصصی    رکورد تخصصی
+  │              │               │              │
+  └──────────────┴───────────────┴──────────────┘
+                         │
+                         ▼
+                  پرونده تخصصی
+                         │
+             ┌───────────┼───────────┐
+             ▼           ▼           ▼
+          اطلاعات      اسناد       تعاملات
+             │           │           │
+             └───────────┼───────────┘
+                         ▼
+                    AI / RAG
+                         │
+                         ▼
+                    DecisionOS
+این باید تبدیل به یکی از اصول اصلی معماری پروژه شود.
+
+2. تفاوت «Service» و «Case»
+این دو را نباید با هم یکی کنیم.
+Service
+نوع خدمتی است که کاربر درخواست کرده است.
+مثلاً:
+خرید آپارتمان
+سرمایه‌گذاری ملکی
+فروش ملک
+مشاوره حقوقی
+تحلیل قرارداد
+پرونده قضایی
+شرکت در مزایده
+شرکت در مناقصه
+Case
+پرونده عملیاتی همان درخواست است.
+مثلاً:
+Service:
+سرمایه‌گذاری برای خرید آپارتمان
+
+Case:
+INV-1405-000127
+بنابراین یک کاربر می‌تواند همزمان چند Case داشته باشد:
+User
+│
+├── Case 001
+│   └── خرید آپارتمان
+│
+├── Case 002
+│   └── پرونده حقوقی
+│
+├── Case 003
+│   └── سرمایه‌گذاری
+│
+└── Case 004
+    └── مزایده
+این ساختار برای DecisionOS بسیار مهم است.
+
+3. ساختار داده پایه پیشنهادی
+در سطح Database، یک ساختار مرکزی داشته باشیم:
+User
+  ↓
+ServiceRequest
+  ↓
+ServiceType
+  ↓
+Case
+  ↓
+ServiceRecord
+  ↓
+Documents
+  ↓
+Interactions
+  ↓
+AI Analysis
+ServiceRequest
+درخواست اولیه کاربر:
+request_id
+user_id
+service_type_id
+created_at
+status
+priority
+source
+Case
+پرونده ایجادشده:
+case_id
+request_id
+user_id
+workspace_id
+service_type_id
+case_number
+status
+created_at
+assigned_expert
+ServiceRecord
+اطلاعات تخصصی همان خدمت:
+record_id
+case_id
+service_type_id
+data
+version
+created_at
+updated_at
+اما data نباید یک JSON بی‌ساختار و بدون Schema باشد. برای خدمات مهم، فیلدهای تخصصی باید Schema مشخص داشته باشند.
+
+4. مثال کامل: مشتری سرمایه‌گذار برای خرید آپارتمان
+فرم اولیه باید متناسب با هدف کاربر باز شود.
+مثلاً:
+اطلاعات هدف سرمایه‌گذاری
+نوع درخواست:
+□ خرید برای سکونت
+□ سرمایه‌گذاری
+□ خرید و فروش مجدد
+□ اجاره‌داری
+□ ساخت و سرمایه‌گذاری
+سرمایه
+بودجه کل:
+حداقل سرمایه:
+حداکثر سرمایه:
+مبلغ نقد:
+مبلغ قابل تأمین:
+روش تأمین مالی:
+محدوده جغرافیایی
+استان
+شهر
+منطقه
+محله
+محدوده ترجیحی
+محدوده‌های قابل قبول
+محدوده‌های غیرقابل قبول
+مشخصات ملک
+نوع ملک:
+آپارتمان / ویلا / زمین / تجاری / اداری
+
+سن بنا:
+حداقل
+حداکثر
+
+متراژ:
+حداقل
+حداکثر
+
+تعداد خواب:
+□ 1
+□ 2
+□ 3
+□ 4+
+
+طبقه:
+حداقل
+حداکثر
+
+تعداد طبقات ساختمان:
+امکانات
+پارکینگ:
+□ الزامی
+□ ترجیحی
+□ مهم نیست
+
+تعداد پارکینگ:
+
+انباری:
+□ الزامی
+□ ترجیحی
+□ مهم نیست
+
+آسانسور:
+□ الزامی
+□ ترجیحی
+□ مهم نیست
+
+فول امکانات:
+□ بله
+□ خیر
+مشخصات ساختمان
+نما:
+سنگ
+آجر
+کامپوزیت
+مدرن
+کلاسیک
+سایر
+
+وضعیت ساختمان:
+نوساز
+کم‌سن
+میان‌سال
+قدیمی
+وضعیت ثبتی
+نوع سند:
+□ سند تک‌برگ
+□ سند دفترچه‌ای
+□ اوقافی
+□ عرصه و اعیان
+□ سایر
+
+وضعیت سند:
+□ آزاد
+□ در رهن
+□ بازداشت
+□ نامشخص
+معیار سرمایه‌گذاری
+هدف سود:
+□ افزایش قیمت
+□ اجاره
+□ هر دو
+
+افق سرمایه‌گذاری:
+□ کوتاه‌مدت
+□ میان‌مدت
+□ بلندمدت
+
+ریسک قابل قبول:
+کم / متوسط / زیاد
+این اطلاعات باید رکورد رسمی Case شوند، نه اینکه فقط در متن Chat باقی بمانند.
+[8/29/2026 1:05 AM] میرزاده دایی شهرام: 5. نکته بسیار مهم: «Preference» از «Fact» جدا شود
+در همین مثال باید بین دو نوع داده تفاوت وجود داشته باشد.
+اطلاعات قطعی مشتری
+مثلاً:
+بودجه = 10 میلیارد تومان
+شهر = بابل
+ترجیح مشتری
+مثلاً:
+پارکینگ = ترجیحی
+نمای سنگ = ترجیحی
+سن بنا زیر 10 سال = ترجیحی
+این دو نباید در Database با یک مفهوم ذخیره شوند.
+پیشنهاد Schema:
+Field
+Value
+Importance
+Source
+Confidence
+مثلاً:
+parking
+2
+required
+user
+high
+یا:
+facade
+stone
+preferred
+user
+high
+این طراحی بعداً برای موتور Matching بسیار مهم خواهد بود.
+
+6. اطلاعات کاربر و اطلاعات ملک را جدا کنیم
+یک اشتباه مهم این است که اطلاعات مشتری و ملک پیشنهادی در یک Record قرار بگیرند.
+ساختار درست:
+Case
+│
+├── Client Profile
+│
+├── Client Requirements
+│
+├── Property Candidates
+│
+├── Documents
+│
+├── Analysis
+└── Decision
+مثلاً مشتری می‌گوید:
+آپارتمان سه‌خوابه، زیر ۱۰ سال، دارای پارکینگ، بودجه ۱۰ میلیارد.
+این می‌شود:
+Client Requirement
+اما وقتی یک ملک پیدا شد:
+آپارتمان ۳ خواب، ۸ سال ساخت، ۹.۷ میلیارد، یک پارکینگ...
+این می‌شود:
+Property Candidate
+بعد DecisionOS آنها را با هم مقایسه می‌کند.
+
+7. پرونده تخصصی سرمایه‌گذاری ملکی
+برای این خدمت:
+Investment Property Case
+│
+├── Investor Profile
+├── Investment Objective
+├── Budget
+├── Location Requirements
+├── Property Requirements
+├── Legal Requirements
+├── Financial Requirements
+├── Property Candidates
+├── Documents
+├── Market Data
+├── Expert Opinions
+├── AI Analysis
+├── Risk Assessment
+└── Decision
+
+8. پرونده تخصصی حقوقی
+برای بخش حقوقی نباید فرم سرمایه‌گذاری استفاده شود.
+مثلاً:
+Legal Case
+│
+├── نوع پرونده
+├── موضوع دعوا
+├── خواهان
+├── خوانده
+├── وکیل
+├── شخص ثالث
+├── خواسته
+├── بهای خواسته
+├── مرجع قضایی
+├── شعبه
+├── شماره پرونده
+├── شماره بایگانی
+├── شماره دادنامه
+├── تاریخ‌های مهم
+├── شرح ماجرا
+├── ادعاهای طرفین
+├── دفاعیات
+├── قراردادها
+├── اسناد
+├── چک‌ها
+├── اظهارنامه‌ها
+├── آراء
+├── نظریات کارشناسی
+├── مواد قانونی مرتبط
+├── ادله
+├── ایرادات
+├── تعارضات
+├── اقدامات انجام‌شده
+├── مهلت‌های قانونی
+├── ریسک‌ها
+└── وضعیت پرونده
+این اطلاعات باید Record تخصصی پرونده حقوقی باشند.
+
+9. رکورد تخصصی قرارداد
+اگر کاربر خدمت «تحلیل قرارداد» درخواست کرد، پرونده متفاوت باشد:
+Contract Case
+│
+├── Contract Type
+├── Contract Number
+├── Contract Date
+├── Parties
+├── Party Roles
+├── Subject
+├── Price
+├── Payment Terms
+├── Delivery
+├── Guarantees
+├── Penalties
+├── Termination
+├── فسخ
+├── انفساخ
+├── شروط
+├── Obligations
+├── Dispute Resolution
+├── Attachments
+├── Risks
+└── AI Contract Analysis
+
+10. پرونده خرید و فروش ملک
+Property Transaction Case
+│
+├── Buyer
+├── Seller
+├── Property
+├── Price
+├── Payment
+├── Deposit
+├── Delivery Date
+├── Transfer Date
+├── Title
+├── Registry Status
+├── Mortgage
+├── Seizure
+├── Encumbrances
+├── Building Permit
+├── Completion Certificate
+├── Parking
+├── Storage
+├── Contract
+├── Documents
+├── Due Diligence
+├── Risks
+└── Decision
+
+11. پرونده مزایده
+Auction Case
+│
+├── Auction Authority
+├── Auction Number
+├── Subject
+├── Asset
+├── Base Price
+├── Deposit
+├── Date
+├── Conditions
+├── Eligibility
+├── Legal Restrictions
+├── Documents
+├── Valuation
+├── Risk Analysis
+├── Maximum Bid
+├── Financial Analysis
+└── Decision
+
+12. پرونده مناقصه
+Tender Case
+│
+├── Tender Authority
+├── Tender Number
+├── Subject
+├── Deadline
+├── Qualification
+├── Technical Requirements
+├── Financial Requirements
+├── Guarantees
+├── Documents
+├── Pricing
+├── Competitor Analysis
+├── Compliance
+├── Risk
+└── Decision
+
+13. مشاوره مالی/سرمایه‌گذاری
+این خدمت نیز Record اختصاصی خودش را داشته باشد:
+Investment Advisory Case
+│
+├── Investor Profile
+├── Capital
+├── Investment Goal
+├── Investment Horizon
+├── Risk Tolerance
+├── Liquidity Requirement
+├── Preferred Assets
+├── Excluded Assets
+├── Expected Return
+├── Existing Investments
+├── Constraints
+├── Opportunities
+├── Risk Analysis
+├── Scenarios
+└── Recommendation
+
+14. یک نکته معماری بسیار مهم: Dynamic Form Engine
+برای اینکه هر بار برای یک خدمت جدید مجبور نشویم Frontend و Database را از صفر تغییر دهیم، DecisionOS باید یک Service Form Engine داشته باشد.
+ساختار:
+Service Type
+      ↓
+Form Schema
+      ↓
+Sections
+      ↓
+Fields
+      ↓
+Validation Rules
+      ↓
+Record
+مثلاً:
+SERVICE:
+PROPERTY_INVESTMENT
+
+FORM:
+property_investment_v1
+[8/29/2026 1:05 AM] میرزاده دایی شهرام: SECTIONS:
+Investor
+Budget
+Location
+Property
+Legal
+Investment
+در آینده می‌توانیم:
+PROPERTY_INVESTMENT_V2
+بسازیم بدون اینکه اطلاعات نسخه قبلی از بین برود.
+
+15. Field Registry
+تمام فیلدها بهتر است Registry داشته باشند.
+مثلاً:
+field_id:
+budget_max
+
+label:
+حداکثر بودجه
+
+type:
+currency
+
+required:
+true
+
+service:
+property_investment
+یا:
+field_id:
+parking
+
+type:
+enum
+
+values:
+required
+preferred
+not_required
+unknown
+این کار باعث می‌شود سیستم فرم‌سازی قابل توسعه باشد.
+
+16. Service Registry
+خود خدمات نیز باید Registry داشته باشند:
+Service
+│
+├── service_id
+├── name
+├── category
+├── version
+├── active
+├── form_schema
+├── case_schema
+├── workflow
+├── permissions
+├── AI capabilities
+└── agents
+مثلاً:
+PROPERTY_INVESTMENT
+PROPERTY_TRANSACTION
+LEGAL_CASE
+CONTRACT_ANALYSIS
+AUCTION
+TENDER
+INVESTMENT_ADVISORY
+
+17. اتصال Service به AI
+این موضوع برای Sprint 4 بسیار مهم است.
+هر Service باید مشخص کند از چه قابلیت‌های AI استفاده می‌کند.
+مثلاً:
+Property Investment
+       ↓
+Requirement Extraction
+       ↓
+Property Matching
+       ↓
+Financial Analysis
+       ↓
+Legal Due Diligence
+       ↓
+Risk Analysis
+اما:
+Legal Case
+       ↓
+Document Analysis
+       ↓
+Legal Retrieval
+       ↓
+Timeline Extraction
+       ↓
+Contradiction Detection
+       ↓
+Legal Issue Identification
+یعنی AI براساس نوع Case رفتار متفاوت خواهد داشت.
+
+18. معماری نهایی پیشنهادی
+ساختار اصلی DecisionOS را از این مرحله به بعد این‌گونه Freeze کنیم:
+DecisionOS
+                             │
+                         User / Tenant
+                             │
+                         Workspace
+                             │
+                       Service Request
+                             │
+                       Service Registry
+                             │
+                   ┌─────────┴─────────┐
+                   │                   │
+             Form Schema          Workflow
+                   │                   │
+                   ▼                   ▼
+            Service Record            Case
+                                        │
+             ┌──────────────────────────┼─────────────────────┐
+             │                          │                     │
+             ▼                          ▼                     ▼
+      Structured Data              Documents             Interactions
+             │                          │                     │
+             │                          ▼                     │
+             │                   Document Intelligence        │
+             │                          │                     │
+             │                          ▼                     │
+             │                   Knowledge Base               │
+             │                          │                     │
+             └──────────────────────────┼─────────────────────┘
+                                        ▼
+                                   RAG Engine
+                                        │
+                                        ▼
+                                  Service Agent
+                                        │
+                                        ▼
+                                  Risk / Analysis
+                                        │
+                                        ▼
+                                  Decision Support
+
+19. نکته بسیار مهم درباره پرونده
+در DecisionOS، Case باید Container اصلی تصمیم‌سازی باشد.
+یعنی تمام این موارد باید زیر Case قرار بگیرند:
+Case
+│
+├── Client Data
+├── Requirements
+├── Service Records
+├── Documents
+├── Structured Facts
+├── Conversations
+├── Tasks
+├── Experts
+├── AI Analysis
+├── Risks
+├── Decisions
+└── Audit
+بنابراین اطلاعات مهم نباید فقط در Chat باقی بمانند.
+
+20. اطلاعات استخراج‌شده توسط AI نیز Record شود
+مثلاً کاربر یک قرارداد PDF آپلود می‌کند.
+AI از آن استخراج می‌کند:
+شماره قرارداد: 90757
+تاریخ: ...
+فروشنده: ...
+[8/29/2026 1:05 AM] میرزاده دایی شهرام: خریدار: ...
+مبلغ: ...
+اینها نباید فقط در پاسخ Chat نمایش داده شوند.
+باید بتوانیم:
+Document
+    ↓
+AI Extraction
+    ↓
+Structured Fact
+    ↓
+Case Record
+داشته باشیم.
+و هر Fact باید Source داشته باشد:
+Fact
+├── Value
+├── Source Document
+├── Page
+├── Chunk
+├── Extraction Method
+└── Confidence
+این ویژگی بعدها برای تحلیل تعارض بین اسناد بسیار مهم خواهد بود.
+
+21. یک Record ممکن است توسط چند منبع پشتیبانی شود
+مثلاً:
+Property Price = 10 Billion
+ممکن است از:
+قرارداد
+رسید پرداخت
+اظهارنامه
+اظهارات کاربر
+به دست آمده باشد.
+پس ساختار باید اجازه دهد:
+Fact
+  │
+  ├── Source 1
+  ├── Source 2
+  └── Source 3
+این همان چیزی است که DecisionOS را از یک فرم‌ساز ساده به یک سیستم تصمیم‌یار تبدیل می‌کند.
+
+22. نتیجه مهم برای Sprint 3
+با توجه به این نیاز جدید، من Sprint 3 را به این صورت اصلاح می‌کنم:
+Sprint 3A
+Service & Case Data Architecture
+Sprint 3B
+Document Intelligence
+Sprint 3C
+Knowledge Base
+Sprint 3D
+Retrieval
+Sprint 3E
+RAG
+Sprint 3F
+Evidence & Citation
+Sprint 3G
+Service-specific Record Engine
+این قسمت Service-specific Record Engine باید حتماً به Sprint 3 اضافه شود.
+
+نتیجه نهایی
+از این مرحله به بعد، DecisionOS نباید با این منطق ساخته شود که:
+«کاربر وارد سیستم شد و یک Chat باز کرد.»
+بلکه منطق اصلی باید این باشد:
+کاربر یک خدمت مشخص درخواست می‌کند → DecisionOS نوع خدمت را تشخیص/انتخاب می‌کند → فرم تخصصی همان خدمت نمایش داده می‌شود → اطلاعات به‌صورت Structured Record ثبت می‌شود → پرونده تخصصی ایجاد می‌شود → اسناد و اطلاعات مربوط به همان پرونده متصل می‌شوند → RAG روی همان Case کار می‌کند → Agent تخصصی خدمت در Sprint 4 روی آن قرار می‌گیرد → در نهایت DecisionOS به تصمیم‌یار تبدیل می‌شود.
+بنابراین در طراحی نهایی، این چهار مفهوم باید از یکدیگر کاملاً تفکیک و در عین حال به هم متصل باشند:
+Service → Service Record → Case → Knowledge Base
+این تصمیم معماری باید قبل از ادامه توسعه Sprint 3 تثبیت شود؛ چون مستقیماً روی Database، API، UI، RAG، Agentها و Sprintهای 4 و 5 اثر می‌گذارد.
