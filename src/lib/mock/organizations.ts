@@ -71,8 +71,9 @@ export const HOLDING_SERVICE_CATEGORIES = [
   { id: 'contract', label: 'قرارداد', desc: 'تنظیم، بازبینی و بیمه در قراردادها' },
   { id: 'technology', label: 'فناوری', desc: 'نرم‌افزار، شبکه و پروژه‌های فنی' },
   { id: 'accounting', label: 'حسابداری', desc: 'اسناد مالی و مالیاتی' },
-  { id: 'real_estate', label: 'املاک', desc: 'ثبت، سند، معامله، مزایده و مناقصه' },
-  { id: 'business', label: 'کسب‌وکار', desc: 'ثبت شرکت، سرمایه‌گذاری و حاکمیت شرکتی' },
+  { id: 'real_estate', label: 'املاک', desc: 'خرید و فروش ملک، مزایده و مناقصه' },
+  { id: 'business', label: 'هلدینگ تجاری', desc: 'بازرگانی، ساختار هلدینگ و توسعه کسب‌وکار' },
+  { id: 'investment', label: 'مشاوره سرمایه‌گذاری', desc: 'مشاوره سرمایه‌گذاری (جدا از هلدینگ تجاری)' },
 ];
 
 /** نگاشت دسته سقف هلدینگ → category خدمات MOCK_SERVICES */
@@ -83,6 +84,7 @@ export const HOLDING_TO_SERVICE_CATEGORIES: Record<string, string[]> = {
   accounting: ['accounting', 'finance'],
   real_estate: ['real_estate'],
   business: ['business', 'investment'],
+  investment: ['investment'],
 };
 
 export const DEFAULT_TENANT_NAME = 'هلدینگ پارس امید';

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import {
   Gavel,
@@ -13,13 +13,15 @@ import {
   Sparkles,
   ChevronLeft,
   Grid,
-  List
+  List,
+  ClipboardList,
 } from 'lucide-react';
 import { CaseItem, CaseCategory, CaseStatus } from '../types';
 import { EmptyState } from './ui/EmptyState';
 import { ALL_CASE_STATUSES, CASE_STATUS_LABELS, CASE_STATUS_COLORS } from '../lib/labels';
 import { useAuth } from '../context/AuthContext';
 import { getServiceRegistry } from '../lib/mock';
+import { ROUTES } from '../routes';
 
 interface CaseListViewProps {
   cases: CaseItem[];
@@ -35,7 +37,9 @@ export const CaseListView: React.FC<CaseListViewProps> = ({
   onOpenNewCaseModal
 }) => {
   const { t } = useLanguage();
-  const { can } = useAuth();
+  const { can, user } = useAuth();
+  const navigate = useNavigate();
+  const isCustomer = user?.role === 'customer';
 
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<'all' | CaseCategory>('all');
@@ -111,20 +115,34 @@ export const CaseListView: React.FC<CaseListViewProps> = ({
         <div>
           <h1 className="text-lg font-bold text-slate-800 flex items-center gap-2">
             <Gavel className="w-5 h-5 text-blue-600" />
-            <span>پروژه‌ها و پرونده‌ها</span>
+            <span>{isCustomer ? 'پروژه‌های من' : 'پروژه‌ها و پرونده‌ها'}</span>
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            مشاهده، فیلتر و پیگیری پروژه‌ها همراه با وضعیت و پیشرفت
+            {isCustomer
+              ? 'درخواست‌ها و پروژه‌های شما — ورود، وضعیت و پیگیری'
+              : 'مشاهده، فیلتر و پیگیری پروژه‌ها همراه با وضعیت و پیشرفت'}
           </p>
         </div>
 
-        <button
-          onClick={onOpenNewCaseModal}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3.5 py-2 rounded-md transition-colors shadow-xs flex items-center justify-center gap-2 shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          <span>{t('newCase')}</span>
-        </button>
+        {isCustomer ? (
+          <button
+            type="button"
+            onClick={() => navigate(ROUTES.requestNew)}
+            className="bg-teal-700 hover:bg-teal-800 text-white font-semibold text-xs px-3.5 py-2 rounded-md transition-colors shadow-xs flex items-center justify-center gap-2 shrink-0"
+          >
+            <ClipboardList className="w-4 h-4" />
+            <span>درخواست مشاوره</span>
+          </button>
+        ) : can('create_case') ? (
+          <button
+            type="button"
+            onClick={onOpenNewCaseModal}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3.5 py-2 rounded-md transition-colors shadow-xs flex items-center justify-center gap-2 shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{t('newCase')}</span>
+          </button>
+        ) : null}
       </div>
 
       {/* Filter Tabs & Search Bar */}
@@ -289,11 +307,17 @@ export const CaseListView: React.FC<CaseListViewProps> = ({
       {/* Cases Output */}
       {isEmptySystem ? (
         <EmptyState
-          title="هنوز پروژه‌ای ایجاد نکرده‌اید"
-          description="اولین پروژه خود را ثبت کنید یا از طریق ثبت درخواست شروع کنید."
-          actionLabel={can('create_case') ? 'ایجاد پروژه' : undefined}
-          onAction={can('create_case') ? onOpenNewCaseModal : undefined}
-          icon={<Gavel className="w-5 h-5" />}
+          title={isCustomer ? 'هنوز پروژه‌ای ندارید' : 'هنوز پروژه‌ای ایجاد نکرده‌اید'}
+          description={
+            isCustomer
+              ? 'با درخواست مشاوره شروع کنید؛ پس از ثبت، اینجا دیده می‌شود.'
+              : 'اولین پروژه خود را ثبت کنید یا از طریق ثبت درخواست شروع کنید.'
+          }
+          actionLabel={isCustomer ? 'درخواست مشاوره' : can('create_case') ? 'ایجاد پروژه' : undefined}
+          onAction={
+            isCustomer ? () => navigate(ROUTES.requestNew) : can('create_case') ? onOpenNewCaseModal : undefined
+          }
+          icon={isCustomer ? <ClipboardList className="w-5 h-5" /> : <Gavel className="w-5 h-5" />}
         />
       ) : isEmptyFiltered ? (
         <EmptyState

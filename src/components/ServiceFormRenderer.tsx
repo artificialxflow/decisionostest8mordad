@@ -30,7 +30,7 @@ export const ServiceFormRenderer: React.FC<Props> = ({ schema, values, onChange,
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div>
           <p className="text-sm font-black text-slate-900 dark:text-white">{schema.title}</p>
-          <p className="text-[11px] text-slate-500 mt-0.5">فرم تخصصی خدمت — اطلاعات در رکورد پرونده ذخیره می‌شود</p>
+          <p className="text-[11px] text-slate-500 mt-0.5">برای نظر اولیه فقط فیلدهای ستاره‌دار لازم است — بقیه اختیاری است</p>
         </div>
         <Badge tone="neutral">{schema.version}</Badge>
       </div>

@@ -6,7 +6,10 @@ const TYPE_LABELS: Record<CalendarEventItem['type'], string> = {
   deadline: 'مهلت',
   meeting: 'جلسه',
   reminder: 'یادآور',
-  task: 'Task',
+  task: 'کار',
+  office: 'دفتر',
+  expert: 'کارشناس',
+  court: 'دادگاه',
 };
 
 const TYPE_COLORS: Record<CalendarEventItem['type'], string> = {
@@ -14,6 +17,9 @@ const TYPE_COLORS: Record<CalendarEventItem['type'], string> = {
   meeting: 'border-blue-300 bg-blue-50',
   reminder: 'border-amber-300 bg-amber-50',
   task: 'border-cyan-300 bg-cyan-50',
+  office: 'border-slate-300 bg-slate-50',
+  expert: 'border-violet-300 bg-violet-50',
+  court: 'border-rose-300 bg-rose-50',
 };
 
 interface CalendarViewProps {

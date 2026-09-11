@@ -76,6 +76,13 @@ export const ExpertMatchingPanel: React.FC<ExpertMatchingPanelProps> = ({
                 </div>
               </Link>
               <Badge tone="green">{(95 - i * 7)}٪ تطابق</Badge>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => alert(`پیام نمایشی برای ${e.name}`)}
+              >
+                ارسال پیام
+              </Button>
             </div>
           ))}
           <Button size="sm" variant="outline" className="w-full mt-2" onClick={() => setCompareOpen(true)}>

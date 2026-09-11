@@ -64,7 +64,7 @@ export const WorkspacePage: React.FC = () => {
       <EmptyState
         title="هنوز Workspace ندارید"
         description="با ثبت درخواست یا ایجاد پرونده، Workspace ساخته می‌شود."
-        actionLabel={can('create_case') ? 'ایجاد پرونده' : 'ثبت درخواست'}
+        actionLabel={can('create_case') ? 'ایجاد پرونده' : 'درخواست مشاوره'}
         onAction={() => (can('create_case') ? openNewCase() : navigate(ROUTES.requestNew))}
         icon={<FolderKanban className="w-5 h-5" />}
       />

@@ -1,4 +1,4 @@
-/** Mock sessions for Customer / Expert dashboards (v5) */
+/** Mock sessions for Customer / Expert dashboards (v5 / v8) */
 
 export interface SessionItem {
   id: string;
@@ -11,6 +11,7 @@ export interface SessionItem {
   caseId?: string;
   caseTitle?: string;
   status: 'upcoming' | 'live' | 'done' | 'cancelled';
+  kind?: 'consult' | 'group';
   avatarUrl?: string;
 }
 
@@ -26,6 +27,7 @@ const sessions: SessionItem[] = [
     caseId: 'case-101',
     caseTitle: 'دعوای الزام به تنظیم سند',
     status: 'upcoming',
+    kind: 'consult',
     avatarUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=80',
   },
   {
@@ -38,11 +40,12 @@ const sessions: SessionItem[] = [
     clientName: 'علی محمدی',
     caseId: 'case-102',
     status: 'upcoming',
+    kind: 'consult',
     avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=80',
   },
   {
     id: 'ses-3',
-    title: 'جلسه پیگیری پرونده ملکی',
+    title: 'جلسه گروهی پرونده ملکی',
     date: '۱۴۰۳/۰۶/۲۲',
     time: '۰۹:۳۰',
     expertName: 'دکتر محمدرضا صادقی',
@@ -50,6 +53,7 @@ const sessions: SessionItem[] = [
     clientName: 'شرکت پارس امید',
     caseId: 'case-101',
     status: 'upcoming',
+    kind: 'group',
   },
   {
     id: 'ses-4',
@@ -60,6 +64,7 @@ const sessions: SessionItem[] = [
     expertId: 'exp-5',
     clientName: 'علی محمدی',
     status: 'done',
+    kind: 'consult',
   },
 ];
 

@@ -95,7 +95,7 @@ export const PlatformNavbar: React.FC<PlatformNavbarProps> = ({ onToggleMobile }
       </div>
 
       <div className="hidden md:flex items-center gap-3 flex-1 max-w-md mx-6">
-        {can('create_case') && (
+        {can('create_case') ? (
           <button
             onClick={openNewCase}
             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3.5 py-1.5 rounded-md flex items-center gap-2 shrink-0"
@@ -103,7 +103,15 @@ export const PlatformNavbar: React.FC<PlatformNavbarProps> = ({ onToggleMobile }
             <PlusCircle className="w-4 h-4" />
             <span>{t('newCase')}</span>
           </button>
-        )}
+        ) : user?.role === 'customer' ? (
+          <Link
+            to={ROUTES.requestNew}
+            className="bg-teal-700 hover:bg-teal-800 text-white font-semibold text-xs px-3.5 py-1.5 rounded-md flex items-center gap-2 shrink-0"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>درخواست مشاوره</span>
+          </Link>
+        ) : null}
         <GlobalSearch />
       </div>
 

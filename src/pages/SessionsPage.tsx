@@ -26,7 +26,7 @@ export const SessionsPage: React.FC = () => {
       )}
       <PageHeader
         title="جلسات من"
-        description="جلسات مشاوره و آنلاین — mock"
+        description="جلسات با مشاور و جلسات گروهی — mock"
         badge={<Badge tone="blue">نسخه نمایشی</Badge>}
         actions={
           <Link to={ROUTES.calendar}>
@@ -64,6 +64,8 @@ export const SessionsPage: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                {s.kind === 'group' && <Badge tone="blue">گروهی</Badge>}
+                {s.kind === 'consult' && <Badge tone="neutral">مشاوره</Badge>}
                 <Badge tone={s.status === 'upcoming' ? 'blue' : s.status === 'done' ? 'green' : 'amber'}>
                   {s.status === 'upcoming' ? 'آینده' : s.status === 'done' ? 'برگزار شده' : s.status}
                 </Badge>

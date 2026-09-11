@@ -114,9 +114,9 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
         <div>
           <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <FileText className="w-5 h-5 text-blue-600" />
-            <span>مرکز مدیریت اسناد</span>
+            <span>اسناد من</span>
           </h1>
-          <p className="text-xs text-slate-500 mt-1">Upload · Preview · OCR · Versioning</p>
+          <p className="text-xs text-slate-500 mt-1">اسناد متصل به درخواست‌ها و پروژه‌های شما</p>
         </div>
         <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold px-2.5 py-1 rounded-md border">
           {documents.length} مدرک

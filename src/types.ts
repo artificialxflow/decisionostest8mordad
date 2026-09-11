@@ -397,7 +397,7 @@ export interface CalendarEventItem {
   id: string;
   title: string;
   date: string;
-  type: 'deadline' | 'meeting' | 'reminder' | 'task';
+  type: 'deadline' | 'meeting' | 'reminder' | 'task' | 'office' | 'expert' | 'court';
   caseId?: string;
   workspaceId?: string;
 }

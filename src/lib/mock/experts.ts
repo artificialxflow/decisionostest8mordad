@@ -179,3 +179,14 @@ export const EXPERT_SPECIALTIES = [
 export function getExpertById(id: string): ExpertProfile | undefined {
   return MOCK_EXPERTS_FULL.find((e) => e.id === id);
 }
+
+/** متخصصانی که مشتری با آن‌ها جلسه/کار داشته (mock از sessions) */
+export function getEngagedExpertIdsForCustomer(_customerId?: string): string[] {
+  // در دمو: جلسات مشتری نمونه با exp-1, exp-2, exp-5
+  return ['exp-1', 'exp-2', 'exp-5'];
+}
+
+export function getEngagedExpertsForCustomer(customerId?: string): ExpertProfile[] {
+  const ids = new Set(getEngagedExpertIdsForCustomer(customerId));
+  return MOCK_EXPERTS_FULL.filter((e) => ids.has(e.id));
+}

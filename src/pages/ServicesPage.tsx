@@ -39,7 +39,7 @@ const CATEGORY_LABELS: Record<ServiceCategory, string> = {
   insurance: 'بیمه',
   finance: 'تحلیل داده',
   accounting: 'مالی و حسابداری',
-  investment: 'سرمایه‌گذاری',
+  investment: 'هلدینگ / سرمایه‌گذاری',
   business: 'فناوری / کسب‌وکار',
   ai: 'تحلیل داده',
 };

@@ -125,7 +125,6 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'view_services',
     'view_workspace',
     'view_cases',
-    'create_case',
     'view_documents',
     'upload_document',
     'view_requests',

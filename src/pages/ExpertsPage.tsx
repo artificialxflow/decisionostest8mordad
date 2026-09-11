@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { PageHeader, Badge, Button, EmptyState } from '../components/ui';
-import { getExpertById, MOCK_EXPERTS_FULL, EXPERT_CITIES, EXPERT_SPECIALTIES } from '../lib/mock/experts';
+import {
+  getExpertById,
+  MOCK_EXPERTS_FULL,
+  EXPERT_CITIES,
+  EXPERT_SPECIALTIES,
+  getEngagedExpertsForCustomer,
+} from '../lib/mock/experts';
 import { getExpertDashboardStats } from '../lib/mock/expertStats';
 import { ROUTES } from '../routes';
 import { useAuth } from '../context/AuthContext';
@@ -40,41 +46,59 @@ export const ExpertCard: React.FC<{ expert: (typeof MOCK_EXPERTS_FULL)[0]; link?
 };
 
 export const ExpertsPage: React.FC = () => {
-  const { can } = useAuth();
+  const { can, user } = useAuth();
+  const navigate = useNavigate();
   const [city, setCity] = useState('همه');
   const [specialty, setSpecialty] = useState('همه');
 
-  const filtered = MOCK_EXPERTS_FULL.filter((e) => {
+  const isManager = can('manage_experts');
+  const isCustomer = user?.role === 'customer';
+  const baseList = isCustomer ? getEngagedExpertsForCustomer(user?.id) : MOCK_EXPERTS_FULL;
+
+  const filtered = baseList.filter((e) => {
     if (city !== 'همه' && e.city !== city) return false;
     if (specialty !== 'همه' && e.specialty !== specialty) return false;
     return true;
   });
 
-  const isManager = can('manage_experts');
-
   return (
     <div className="space-y-5">
       <PageHeader
-        title={isManager ? 'مدیریت و بازار متخصصین' : 'متخصصین'}
-        description="فیلتر بر اساس شهر و تخصص — پروفایل، رزومه و حساب‌کتاب"
-        badge={<Badge tone="blue">Expert Marketplace</Badge>}
+        title={isManager ? 'مدیریت متخصصان' : isCustomer ? 'متخصصان من' : 'متخصصان'}
+        description={
+          isCustomer
+            ? 'فقط متخصصانی که با آن‌ها جلسه یا پروژه داشته‌اید — لیست کامل فقط در مسیر مشاوره تخصصی'
+            : 'فیلتر بر اساس شهر و تخصص — پروفایل، رزومه و حساب‌کتاب'
+        }
+        badge={<Badge tone="blue">{isCustomer ? 'Engaged only' : 'متخصصان'}</Badge>}
       />
 
-      <div className="flex flex-wrap gap-3">
-        <select value={city} onChange={(e) => setCity(e.target.value)} className="border rounded-md px-3 py-1.5 text-xs">
-          {EXPERT_CITIES.map((c) => (
-            <option key={c} value={c}>{c === 'همه' ? 'همه شهرها' : c}</option>
-          ))}
-        </select>
-        <select value={specialty} onChange={(e) => setSpecialty(e.target.value)} className="border rounded-md px-3 py-1.5 text-xs">
-          {EXPERT_SPECIALTIES.map((s) => (
-            <option key={s} value={s}>{s === 'همه' ? 'همه تخصص‌ها' : s}</option>
-          ))}
-        </select>
-      </div>
+      {!isCustomer && (
+        <div className="flex flex-wrap gap-3">
+          <select value={city} onChange={(e) => setCity(e.target.value)} className="border rounded-md px-3 py-1.5 text-xs">
+            {EXPERT_CITIES.map((c) => (
+              <option key={c} value={c}>{c === 'همه' ? 'همه شهرها' : c}</option>
+            ))}
+          </select>
+          <select value={specialty} onChange={(e) => setSpecialty(e.target.value)} className="border rounded-md px-3 py-1.5 text-xs">
+            {EXPERT_SPECIALTIES.map((s) => (
+              <option key={s} value={s}>{s === 'همه' ? 'همه تخصص‌ها' : s}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {filtered.length === 0 ? (
-        <EmptyState title="متخصصی یافت نشد" description="فیلترها را تغییر دهید." />
+        <EmptyState
+          title={isCustomer ? 'هنوز با متخصصی کار نکرده‌اید' : 'متخصصی یافت نشد'}
+          description={
+            isCustomer
+              ? 'پس از درخواست مشاوره تخصصی و انتخاب متخصص، اینجا نمایش داده می‌شوند.'
+              : 'فیلترها را تغییر دهید.'
+          }
+          actionLabel={isCustomer ? 'درخواست مشاوره' : undefined}
+          onAction={isCustomer ? () => navigate(ROUTES.requestNew) : undefined}
+        />
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((e) => (

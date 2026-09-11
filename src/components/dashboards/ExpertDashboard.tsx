@@ -139,6 +139,16 @@ export const ExpertDashboard: React.FC = () => {
           </p>
           <p className="text-2xl font-black">{formatToman(stats.monthlyIncome)} تومان</p>
           <p className="text-[11px] text-emerald-100">+{stats.incomeGrowthPercent}٪ نسبت به ماه قبل</p>
+          <div className="grid grid-cols-2 gap-2 pt-2 text-[10px] text-emerald-50/90">
+            <div className="rounded-lg bg-white/10 p-2">
+              <p className="opacity-80">مشاوره اولیه</p>
+              <p className="font-bold text-sm">۱۲.۵M</p>
+            </div>
+            <div className="rounded-lg bg-white/10 p-2">
+              <p className="opacity-80">از پروژه</p>
+              <p className="font-bold text-sm">۳۱.۲M</p>
+            </div>
+          </div>
         </div>
 
         <div className="bg-white dark:bg-slate-900 rounded-[var(--dos-radius-lg)] border p-4 space-y-2">

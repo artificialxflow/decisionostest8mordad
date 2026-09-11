@@ -16,139 +16,78 @@ export const FORM_SCHEMAS: Record<string, FormSchemaDef> = {
     id: 'property_investment_v1',
     version: 'v1',
     serviceTypeId: 'PROPERTY_INVESTMENT',
-    title: 'سرمایه‌گذاری ملکی',
+    title: 'هلدینگ تجاری',
     sections: [
       {
-        id: 'objective',
-        title: 'هدف سرمایه‌گذاری',
+        id: 'initial',
+        title: 'نظر اولیه',
+        description: 'برای نظر اولیه همین کافی است — بقیه اختیاری است',
+        fields: [
+          {
+            fieldId: 'holding_focus',
+            label: 'حوزه هلدینگ',
+            type: 'enum',
+            required: true,
+            kind: 'fact',
+            options: [
+              { value: 'trading', label: 'بازرگانی / تجارت' },
+              { value: 'industrial', label: 'صنعتی / تولیدی' },
+              { value: 'services', label: 'خدمات' },
+              { value: 'mixed', label: 'ترکیبی' },
+              { value: 'other', label: 'سایر' },
+            ],
+          },
+          {
+            fieldId: 'summary',
+            label: 'شرح نیاز',
+            type: 'textarea',
+            required: true,
+            kind: 'fact',
+            placeholder: 'به‌اختصار بگویید چه کمکی می‌خواهید…',
+          },
+        ],
+      },
+      {
+        id: 'details',
+        title: 'جزئیات بیشتر (اختیاری)',
+        description: 'برای فیلتر دقیق‌تر — الزامی نیست',
         fields: [
           {
             fieldId: 'request_type',
             label: 'نوع درخواست',
             type: 'enum',
-            required: true,
             kind: 'fact',
             options: [
-              { value: 'residence', label: 'خرید برای سکونت' },
+              { value: 'structure', label: 'ساختار هلدینگ' },
               { value: 'investment', label: 'سرمایه‌گذاری' },
-              { value: 'flip', label: 'خرید و فروش مجدد' },
-              { value: 'rent', label: 'اجاره‌داری' },
-              { value: 'build', label: 'ساخت و سرمایه‌گذاری' },
-            ],
-          },
-          {
-            fieldId: 'profit_goal',
-            label: 'هدف سود',
-            type: 'enum',
-            kind: 'preference',
-            options: [
-              { value: 'appreciation', label: 'افزایش قیمت' },
-              { value: 'rent', label: 'اجاره' },
-              { value: 'both', label: 'هر دو' },
-            ],
-          },
-          {
-            fieldId: 'horizon',
-            label: 'افق سرمایه‌گذاری',
-            type: 'enum',
-            kind: 'preference',
-            options: [
-              { value: 'short', label: 'کوتاه‌مدت' },
-              { value: 'mid', label: 'میان‌مدت' },
-              { value: 'long', label: 'بلندمدت' },
+              { value: 'partnership', label: 'مشارکت' },
+              { value: 'expansion', label: 'توسعه کسب‌وکار' },
             ],
           },
           {
             fieldId: 'risk_appetite',
             label: 'ریسک قابل قبول',
             type: 'enum',
-            kind: 'fact',
-            required: true,
+            kind: 'preference',
             options: [
               { value: 'low', label: 'کم' },
               { value: 'medium', label: 'متوسط' },
               { value: 'high', label: 'زیاد' },
             ],
           },
-        ],
-      },
-      {
-        id: 'budget',
-        title: 'بودجه',
-        description: 'مبالغ به‌صورت قطعی (Fact) ثبت می‌شوند',
-        fields: [
-          { fieldId: 'budget_total', label: 'بودجه کل (میلیارد تومان)', type: 'currency', required: true, kind: 'fact' },
-          { fieldId: 'budget_min', label: 'حداقل سرمایه', type: 'currency', kind: 'fact' },
-          { fieldId: 'budget_max', label: 'حداکثر سرمایه', type: 'currency', required: true, kind: 'fact' },
-          { fieldId: 'cash_amount', label: 'مبلغ نقد', type: 'currency', kind: 'fact' },
-          {
-            fieldId: 'finance_method',
-            label: 'روش تأمین مالی',
-            type: 'enum',
-            kind: 'fact',
-            options: [
-              { value: 'cash', label: 'نقد' },
-              { value: 'loan', label: 'وام' },
-              { value: 'mixed', label: 'ترکیبی' },
-            ],
-          },
-        ],
-      },
-      {
-        id: 'location',
-        title: 'محدوده جغرافیایی',
-        fields: [
-          { fieldId: 'province', label: 'استان', type: 'text', required: true, kind: 'fact' },
-          { fieldId: 'city', label: 'شهر', type: 'text', required: true, kind: 'fact' },
-          { fieldId: 'district', label: 'منطقه / محله', type: 'text', kind: 'preference' },
-          { fieldId: 'preferred_areas', label: 'محدوده‌های ترجیحی', type: 'textarea', kind: 'preference' },
-        ],
-      },
-      {
-        id: 'property',
-        title: 'مشخصات ملک',
-        fields: [
+          { fieldId: 'budget_total', label: 'بودجه تقریبی (میلیارد تومان)', type: 'currency', kind: 'fact' },
+          { fieldId: 'province', label: 'استان', type: 'text', kind: 'fact' },
+          { fieldId: 'city', label: 'شهر', type: 'text', kind: 'fact' },
           {
             fieldId: 'property_type',
-            label: 'نوع ملک',
-            type: 'enum',
-            required: true,
-            kind: 'fact',
-            options: [
-              { value: 'apartment', label: 'آپارتمان' },
-              { value: 'villa', label: 'ویلا' },
-              { value: 'land', label: 'زمین' },
-              { value: 'commercial', label: 'تجاری' },
-              { value: 'office', label: 'اداری' },
-            ],
-          },
-          { fieldId: 'area_min', label: 'متراژ حداقل', type: 'number', kind: 'preference', unit: 'م²' },
-          { fieldId: 'area_max', label: 'متراژ حداکثر', type: 'number', kind: 'preference', unit: 'م²' },
-          { fieldId: 'age_max', label: 'حداکثر سن بنا', type: 'number', kind: 'preference', unit: 'سال' },
-          {
-            fieldId: 'rooms',
-            label: 'تعداد خواب',
+            label: 'نوع دارایی (در صورت مرتبط)',
             type: 'enum',
             kind: 'preference',
             options: [
-              { value: '1', label: '۱' },
-              { value: '2', label: '۲' },
-              { value: '3', label: '۳' },
-              { value: '4+', label: '۴+' },
-            ],
-          },
-          { fieldId: 'parking', label: 'پارکینگ', type: 'importance', kind: 'preference', options: IMP },
-          { fieldId: 'storage', label: 'انباری', type: 'importance', kind: 'preference', options: IMP },
-          { fieldId: 'elevator', label: 'آسانسور', type: 'importance', kind: 'preference', options: IMP },
-          {
-            fieldId: 'deed_type',
-            label: 'نوع سند',
-            type: 'enum',
-            kind: 'fact',
-            options: [
-              { value: 'single', label: 'تک‌برگ' },
-              { value: 'booklet', label: 'دفترچه‌ای' },
-              { value: 'waqf', label: 'اوقافی' },
+              { value: 'commercial', label: 'تجاری' },
+              { value: 'office', label: 'اداری' },
+              { value: 'industrial', label: 'صنعتی' },
+              { value: 'land', label: 'زمین' },
               { value: 'other', label: 'سایر' },
             ],
           },
@@ -164,24 +103,26 @@ export const FORM_SCHEMAS: Record<string, FormSchemaDef> = {
     title: 'پرونده حقوقی',
     sections: [
       {
-        id: 'core',
-        title: 'اطلاعات پرونده',
+        id: 'initial',
+        title: 'نظر اولیه',
+        description: 'برای نظر اولیه همین کافی است',
         fields: [
-          { fieldId: 'case_type', label: 'نوع پرونده', type: 'text', required: true, kind: 'fact' },
-          { fieldId: 'subject', label: 'موضوع دعوا', type: 'textarea', required: true, kind: 'fact' },
-          { fieldId: 'plaintiff', label: 'خواهان', type: 'text', required: true, kind: 'fact' },
-          { fieldId: 'defendant', label: 'خوانده', type: 'text', required: true, kind: 'fact' },
+          { fieldId: 'subject', label: 'موضوع', type: 'textarea', required: true, kind: 'fact' },
+          { fieldId: 'story', label: 'شرح مختصر', type: 'textarea', required: true, kind: 'fact' },
+        ],
+      },
+      {
+        id: 'details',
+        title: 'جزئیات بیشتر (اختیاری)',
+        description: 'برای فیلتر دقیق‌تر — الزامی نیست',
+        fields: [
+          { fieldId: 'case_type', label: 'نوع پرونده', type: 'text', kind: 'fact' },
+          { fieldId: 'plaintiff', label: 'خواهان', type: 'text', kind: 'fact' },
+          { fieldId: 'defendant', label: 'خوانده', type: 'text', kind: 'fact' },
           { fieldId: 'claim_amount', label: 'بهای خواسته (میلیون تومان)', type: 'currency', kind: 'fact' },
           { fieldId: 'court', label: 'مرجع قضایی', type: 'text', kind: 'fact' },
           { fieldId: 'branch', label: 'شعبه', type: 'text', kind: 'fact' },
           { fieldId: 'court_case_no', label: 'شماره پرونده', type: 'text', kind: 'fact' },
-        ],
-      },
-      {
-        id: 'story',
-        title: 'شرح و ادعاها',
-        fields: [
-          { fieldId: 'story', label: 'شرح ماجرا', type: 'textarea', required: true, kind: 'fact' },
           { fieldId: 'claims', label: 'ادعاهای طرفین', type: 'textarea', kind: 'fact' },
           { fieldId: 'deadlines', label: 'مهلت‌های قانونی مهم', type: 'textarea', kind: 'fact' },
         ],
@@ -196,8 +137,9 @@ export const FORM_SCHEMAS: Record<string, FormSchemaDef> = {
     title: 'تحلیل قرارداد',
     sections: [
       {
-        id: 'meta',
-        title: 'مشخصات قرارداد',
+        id: 'initial',
+        title: 'نظر اولیه',
+        description: 'برای نظر اولیه همین کافی است',
         fields: [
           {
             fieldId: 'contract_type',
@@ -214,10 +156,16 @@ export const FORM_SCHEMAS: Record<string, FormSchemaDef> = {
               { value: 'other', label: 'سایر' },
             ],
           },
+          { fieldId: 'subject', label: 'موضوع / شرح نیاز', type: 'textarea', required: true, kind: 'fact' },
+        ],
+      },
+      {
+        id: 'details',
+        title: 'جزئیات بیشتر (اختیاری)',
+        fields: [
           { fieldId: 'contract_number', label: 'شماره قرارداد', type: 'text', kind: 'fact' },
           { fieldId: 'contract_date', label: 'تاریخ', type: 'date', kind: 'fact' },
-          { fieldId: 'parties', label: 'طرفین', type: 'textarea', required: true, kind: 'fact' },
-          { fieldId: 'subject', label: 'موضوع', type: 'textarea', required: true, kind: 'fact' },
+          { fieldId: 'parties', label: 'طرفین', type: 'textarea', kind: 'fact' },
           { fieldId: 'price', label: 'مبلغ', type: 'currency', kind: 'fact' },
           { fieldId: 'payment_terms', label: 'شرایط پرداخت', type: 'textarea', kind: 'fact' },
           { fieldId: 'guarantees', label: 'ضمانت‌ها', type: 'textarea', kind: 'preference' },
@@ -234,15 +182,35 @@ export const FORM_SCHEMAS: Record<string, FormSchemaDef> = {
     title: 'خرید و فروش ملک',
     sections: [
       {
-        id: 'parties',
-        title: 'طرفین و ملک',
+        id: 'initial',
+        title: 'نظر اولیه',
+        description: 'برای نظر اولیه همین کافی است',
         fields: [
-          { fieldId: 'buyer', label: 'خریدار', type: 'text', required: true, kind: 'fact' },
-          { fieldId: 'seller', label: 'فروشنده', type: 'text', required: true, kind: 'fact' },
-          { fieldId: 'property_desc', label: 'شرح ملک', type: 'textarea', required: true, kind: 'fact' },
-          { fieldId: 'price', label: 'قیمت (میلیارد)', type: 'currency', required: true, kind: 'fact' },
+          {
+            fieldId: 'deal_side',
+            label: 'خرید یا فروش',
+            type: 'enum',
+            required: true,
+            kind: 'fact',
+            options: [
+              { value: 'buy', label: 'خرید' },
+              { value: 'sell', label: 'فروش' },
+            ],
+          },
+          { fieldId: 'property_desc', label: 'شرح ملک / نیاز', type: 'textarea', required: true, kind: 'fact' },
+        ],
+      },
+      {
+        id: 'details',
+        title: 'جزئیات بیشتر (اختیاری)',
+        description: 'نقشه و مشخصات دقیق در صورت نیاز',
+        fields: [
+          { fieldId: 'buyer', label: 'خریدار', type: 'text', kind: 'fact' },
+          { fieldId: 'seller', label: 'فروشنده', type: 'text', kind: 'fact' },
+          { fieldId: 'price', label: 'قیمت (میلیارد)', type: 'currency', kind: 'fact' },
           { fieldId: 'deposit', label: 'بیعانه', type: 'currency', kind: 'fact' },
           { fieldId: 'transfer_date', label: 'تاریخ انتقال', type: 'date', kind: 'preference' },
+          { fieldId: 'map_note', label: 'موقعیت / نقشه (توضیح)', type: 'textarea', kind: 'preference', placeholder: 'آدرس تقریبی یا لینک نقشه…' },
           {
             fieldId: 'registry_status',
             label: 'وضعیت ثبتی',
@@ -267,13 +235,20 @@ export const FORM_SCHEMAS: Record<string, FormSchemaDef> = {
     title: 'مزایده',
     sections: [
       {
-        id: 'core',
-        title: 'اطلاعات مزایده',
+        id: 'initial',
+        title: 'نظر اولیه',
+        description: 'برای نظر اولیه همین کافی است',
         fields: [
-          { fieldId: 'authority', label: 'مرجع مزایده', type: 'text', required: true, kind: 'fact' },
-          { fieldId: 'auction_number', label: 'شماره مزایده', type: 'text', kind: 'fact' },
           { fieldId: 'subject', label: 'موضوع / دارایی', type: 'textarea', required: true, kind: 'fact' },
-          { fieldId: 'base_price', label: 'قیمت پایه', type: 'currency', required: true, kind: 'fact' },
+        ],
+      },
+      {
+        id: 'details',
+        title: 'جزئیات بیشتر (اختیاری)',
+        fields: [
+          { fieldId: 'authority', label: 'مرجع مزایده', type: 'text', kind: 'fact' },
+          { fieldId: 'auction_number', label: 'شماره مزایده', type: 'text', kind: 'fact' },
+          { fieldId: 'base_price', label: 'قیمت پایه', type: 'currency', kind: 'fact' },
           { fieldId: 'deposit', label: 'ودیعه', type: 'currency', kind: 'fact' },
           { fieldId: 'auction_date', label: 'تاریخ', type: 'date', kind: 'fact' },
           { fieldId: 'max_bid', label: 'سقف پیشنهاد شما', type: 'currency', kind: 'preference' },
@@ -290,13 +265,20 @@ export const FORM_SCHEMAS: Record<string, FormSchemaDef> = {
     title: 'مناقصه',
     sections: [
       {
-        id: 'core',
-        title: 'اطلاعات مناقصه',
+        id: 'initial',
+        title: 'نظر اولیه',
+        description: 'برای نظر اولیه همین کافی است',
         fields: [
-          { fieldId: 'authority', label: 'مرجع مناقصه', type: 'text', required: true, kind: 'fact' },
-          { fieldId: 'tender_number', label: 'شماره', type: 'text', kind: 'fact' },
           { fieldId: 'subject', label: 'موضوع', type: 'textarea', required: true, kind: 'fact' },
-          { fieldId: 'deadline', label: 'مهلت', type: 'date', required: true, kind: 'fact' },
+        ],
+      },
+      {
+        id: 'details',
+        title: 'جزئیات بیشتر (اختیاری)',
+        fields: [
+          { fieldId: 'authority', label: 'مرجع مناقصه', type: 'text', kind: 'fact' },
+          { fieldId: 'tender_number', label: 'شماره', type: 'text', kind: 'fact' },
+          { fieldId: 'deadline', label: 'مهلت', type: 'date', kind: 'fact' },
           { fieldId: 'tech_req', label: 'الزامات فنی', type: 'textarea', kind: 'fact' },
           { fieldId: 'fin_req', label: 'الزامات مالی', type: 'textarea', kind: 'fact' },
           { fieldId: 'guarantees', label: 'ضمانت‌نامه‌ها', type: 'textarea', kind: 'preference' },
@@ -312,11 +294,18 @@ export const FORM_SCHEMAS: Record<string, FormSchemaDef> = {
     title: 'مشاوره سرمایه‌گذاری',
     sections: [
       {
-        id: 'profile',
-        title: 'پروفایل سرمایه‌گذار',
+        id: 'initial',
+        title: 'نظر اولیه',
+        description: 'برای نظر اولیه همین کافی است',
         fields: [
-          { fieldId: 'capital', label: 'سرمایه (میلیارد)', type: 'currency', required: true, kind: 'fact' },
           { fieldId: 'goal', label: 'هدف سرمایه‌گذاری', type: 'textarea', required: true, kind: 'fact' },
+        ],
+      },
+      {
+        id: 'details',
+        title: 'جزئیات بیشتر (اختیاری)',
+        fields: [
+          { fieldId: 'capital', label: 'سرمایه (میلیارد)', type: 'currency', kind: 'fact' },
           {
             fieldId: 'horizon',
             label: 'افق زمانی',
@@ -332,8 +321,7 @@ export const FORM_SCHEMAS: Record<string, FormSchemaDef> = {
             fieldId: 'risk',
             label: 'تحمل ریسک',
             type: 'enum',
-            required: true,
-            kind: 'fact',
+            kind: 'preference',
             options: [
               { value: 'low', label: 'کم' },
               { value: 'medium', label: 'متوسط' },
@@ -354,11 +342,18 @@ export const FORM_SCHEMAS: Record<string, FormSchemaDef> = {
     title: 'فناوری / نرم‌افزار',
     sections: [
       {
-        id: 'core',
-        title: 'شرح نیاز فناوری',
+        id: 'initial',
+        title: 'نظر اولیه',
+        description: 'برای نظر اولیه همین کافی است',
         fields: [
-          { fieldId: 'project_type', label: 'نوع پروژه', type: 'text', required: true, kind: 'fact' },
-          { fieldId: 'scope', label: 'محدوده کار', type: 'textarea', required: true, kind: 'fact' },
+          { fieldId: 'scope', label: 'شرح نیاز', type: 'textarea', required: true, kind: 'fact' },
+        ],
+      },
+      {
+        id: 'details',
+        title: 'جزئیات بیشتر (اختیاری)',
+        fields: [
+          { fieldId: 'project_type', label: 'نوع پروژه', type: 'text', kind: 'fact' },
           { fieldId: 'budget', label: 'بودجه تقریبی', type: 'currency', kind: 'fact' },
           { fieldId: 'deadline', label: 'مهلت تحویل', type: 'date', kind: 'preference' },
         ],
@@ -370,15 +365,15 @@ export const FORM_SCHEMAS: Record<string, FormSchemaDef> = {
 export const SERVICE_REGISTRY: ServiceTypeRegistryEntry[] = [
   {
     serviceId: 'PROPERTY_INVESTMENT',
-    name: 'سرمایه‌گذاری ملکی',
+    name: 'هلدینگ تجاری',
     category: 'investment',
     version: '1',
     active: true,
     formSchemaId: 'property_investment_v1',
     caseSchemaSections: [
-      'Investor Profile',
+      'Holding Profile',
       'Requirements',
-      'Property Candidates',
+      'Candidates',
       'Documents',
       'AI Analysis',
       'Risk',
@@ -386,10 +381,10 @@ export const SERVICE_REGISTRY: ServiceTypeRegistryEntry[] = [
     ],
     workflow: ['intake', 'system_reply', 'docs', 'match', 'decision'],
     permissions: ['customer', 'expert', 'admin'],
-    aiCapabilities: ['Requirement Extraction', 'Property Matching', 'Financial Analysis', 'Risk Analysis'],
+    aiCapabilities: ['Requirement Extraction', 'Holding Analysis', 'Financial Analysis', 'Risk Analysis'],
     agents: ['property-investment-agent'],
     icon: 'TrendingUp',
-    description: 'تحلیل و تصمیم‌سازی برای خرید/سرمایه‌گذاری ملک',
+    description: 'هلدینگ تجاری / بازرگانی — ساختار، سرمایه‌گذاری و توسعه کسب‌وکار',
     legacyServiceIds: ['s6'],
     sortOrder: 1,
   },

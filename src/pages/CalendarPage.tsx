@@ -30,7 +30,7 @@ export const CalendarPage: React.FC = () => {
     <div className="space-y-5">
       <PageHeader
         title="تقویم و یادآورها"
-        description="مهلت‌ها، جلسات و follow-up در یک صفحه — mock"
+        description="دفتر، کارشناس، دادگاه + کارهای انجام‌شده و آینده"
         badge={<Badge tone="blue">{MOCK_CALENDAR_EVENTS.length} رویداد</Badge>}
         actions={
           <div className="flex gap-1">
@@ -77,6 +77,25 @@ export const CalendarPage: React.FC = () => {
             </div>
           </div>
           <div className="space-y-2 max-h-[420px] overflow-y-auto">
+            <p className="text-[10px] font-bold text-slate-500 pt-1">رویدادها (دفتر / کارشناس / دادگاه)</p>
+            {MOCK_CALENDAR_EVENTS.filter((e) => ['office', 'expert', 'court'].includes(e.type)).map((e) => (
+              <button
+                key={e.id}
+                type="button"
+                onClick={() => onEventClick(e)}
+                className="w-full text-right text-[11px] p-2 rounded-lg border hover:border-teal-400"
+              >
+                <span className="font-bold">{e.title}</span>
+                <span className="block text-slate-500">{e.date} · {e.type === 'office' ? 'دفتر' : e.type === 'expert' ? 'کارشناس' : 'دادگاه'}</span>
+              </button>
+            ))}
+            <p className="text-[10px] font-bold text-slate-500 pt-2">کارهای انجام‌شده / آینده</p>
+            {MOCK_CALENDAR_EVENTS.filter((e) => e.type === 'task').map((e) => (
+              <div key={e.id} className="text-[11px] p-2 rounded-lg bg-slate-50 dark:bg-slate-800">
+                <p className="font-bold">{e.title}</p>
+                <p className="text-slate-500">{e.date}</p>
+              </div>
+            ))}
             {items.map((r) => (
               <div
                 key={r.id}

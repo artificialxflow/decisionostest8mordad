@@ -28,7 +28,7 @@ import { ExpertMatchingPanel } from '../components/ExpertMatchingPanel';
 import { ServiceFormRenderer, validateFormSchema } from '../components/ServiceFormRenderer';
 import { ServiceItem, ServiceTypeId } from '../types';
 
-const STEPS = ['خدمت', 'فرم تخصصی', 'مدارک', 'پاسخ سیستم', 'بررسی', 'متخصص'];
+const STEPS = ['خدمت', 'فرم', 'مدارک', 'پاسخ سیستم', 'بررسی', 'مشاوره تخصصی'];
 
 export const RequestWizardPage: React.FC = () => {
   const [params] = useSearchParams();
@@ -145,7 +145,7 @@ export const RequestWizardPage: React.FC = () => {
         const { missing } = validateFormSchema(schema, formValues);
         setError(missing.length ? `فیلدهای الزامی: ${missing.join('، ')}` : 'عنوان را تکمیل کنید.');
       } else if (step === 5 && !paymentDone) {
-        setError('برای دیدن متخصصان، ابتدا مشاوره تخصصی را فعال کنید.');
+        setError('برای دیدن متخصصان، ابتدا «درخواست مشاوره تخصصی» را ثبت کنید.');
       } else {
         setError('لطفاً این مرحله را تکمیل کنید.');
       }
@@ -192,19 +192,19 @@ export const RequestWizardPage: React.FC = () => {
             <Sparkles className="w-5 h-5 text-teal-300" />
           </div>
           <div>
-            <p className="text-[10px] text-teal-200/80 tracking-wide">DecisionOS · ثبت خدمت تخصصی</p>
-            <p className="text-sm font-black mt-0.5">خدمت → فرم تخصصی → پاسخ سیستم → (اختیاری) متخصص</p>
+            <p className="text-[10px] text-teal-200/80 tracking-wide">DecisionOS · درخواست مشاوره</p>
+            <p className="text-sm font-black mt-0.5">خدمت → فرم حداقلی → پاسخ سیستم → (اختیاری) مشاوره تخصصی</p>
             <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
-              ابتدا پاسخ اولیه رایگان دریافت می‌کنید. معرفی متخصصان فقط پس از فعال‌سازی مشاوره تخصصی نمایش داده می‌شود.
+              قدم اول فقط پاسخ سیستمی رایگان است. متخصصان فقط پس از «درخواست مشاوره تخصصی» دیده می‌شوند.
             </p>
           </div>
         </div>
       </div>
 
       <PageHeader
-        title="ثبت درخواست خدمت"
-        description="فرم متناسب با نوع خدمت — اطلاعات به‌صورت رکورد ساختاریافته ذخیره می‌شود"
-        badge={<Badge tone="blue">v7 Intake</Badge>}
+        title="درخواست مشاوره"
+        description="فرم حداقلی برای نظر اولیه — اطلاعات شخصی از پروفایل شماست و دوباره پرسیده نمی‌شود"
+        badge={<Badge tone="blue">v8</Badge>}
       />
 
       <div className="flex items-center gap-1 overflow-x-auto pb-2">
@@ -274,6 +274,7 @@ export const RequestWizardPage: React.FC = () => {
             <div className="space-y-4">
               <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
                 <label className="text-xs font-bold">عنوان درخواست *</label>
+                <p className="text-[10px] text-slate-500 mb-1">برای نظر اولیه همین و چند فیلد ستاره‌دار کافی است</p>
                 <input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -326,8 +327,11 @@ export const RequestWizardPage: React.FC = () => {
                 )}
               </div>
               {replyReady && (
-                <div className="px-4 py-3 border-t text-[11px] text-slate-500 bg-slate-50 dark:bg-slate-950/50">
-                  اگر این پاسخ کافی نیست، در مرحله بعد می‌توانید مشاوره تخصصی را فعال کنید.
+                <div className="px-4 py-3 border-t text-[11px] text-slate-500 bg-slate-50 dark:bg-slate-950/50 space-y-2">
+                  <p>اگر این پاسخ کافی نیست، در مرحله بعد می‌توانید «درخواست مشاوره تخصصی» بدهید.</p>
+                  <Button size="sm" variant="outline" onClick={() => { setError(''); setStep(4); }}>
+                    ادامه به بررسی
+                  </Button>
                 </div>
               )}
             </div>
@@ -375,10 +379,10 @@ export const RequestWizardPage: React.FC = () => {
                     <p className="text-sm font-bold text-amber-900 dark:text-amber-100">متخصصان هنوز نمایش داده نمی‌شوند</p>
                   </div>
                   <p className="text-xs text-amber-900/80 dark:text-amber-100/70 leading-relaxed">
-                    مطابق مسیر محصول: پاسخ اولیه رایگان است. برای معرفی و انتخاب متخصص، مشاوره تخصصی را فعال کنید (پرداخت نمایشی).
+                    پاسخ اولیه رایگان و سیستمی بود. تا «درخواست مشاوره تخصصی» ثبت نشود، امکان دریافت هزینه و دیدن متخصص وجود ندارد.
                   </p>
                   <Button size="sm" onClick={handlePay} disabled={paying}>
-                    {paying ? 'در حال فعال‌سازی…' : 'فعال‌سازی مشاوره تخصصی (دمو)'}
+                    {paying ? 'در حال ثبت…' : 'درخواست مشاوره تخصصی (دمو)'}
                   </Button>
                   <Button size="sm" variant="ghost" onClick={handleSubmit}>
                     ثبت فقط با پاسخ سیستم (بدون متخصص)
@@ -388,10 +392,10 @@ export const RequestWizardPage: React.FC = () => {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-emerald-700 text-xs font-bold">
                     <Unlock className="w-4 h-4" />
-                    مشاوره تخصصی فعال شد — می‌توانید متخصص را ببینید و درخواست را ثبت کنید
+                    درخواست مشاوره تخصصی ثبت شد — متخصصان مرتبط را ببینید و انتخاب کنید
                   </div>
                   {entry && <ExpertMatchingPanel serviceTitle={entry.name} compact />}
-                  <Button onClick={handleSubmit}>ثبت نهایی درخواست + پرونده</Button>
+                  <Button onClick={handleSubmit}>ثبت نهایی به‌عنوان پروژه</Button>
                 </div>
               )}
             </div>
